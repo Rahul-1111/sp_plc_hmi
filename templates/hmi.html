@@ -1,0 +1,1213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SP PLC HMI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.min.js"></script>
+    <style>
+        body {
+            font-family: 'Roboto', Arial, sans-serif;
+            background-color: #f0f2f5;
+            margin: 0;
+            padding: 20px;
+            padding-bottom: 80px;
+        }
+        h1, h2 {
+            color: #333;
+            font-size: 32px;
+            margin-bottom: 5px;
+            margin-top: -10px;
+            text-align: center;
+        }
+        .group {
+            background-color: white;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .group h3 {
+            border-bottom: 2px solid #e0e0e0;
+            padding-bottom: 8px;
+            margin-bottom: 10px;
+            margin-top: -10px;
+            font-size: 20px;
+            color: #444;
+        }
+        .indicator {
+            display: inline-block;
+            width: 35px;
+            height: 30px;
+            border-radius: 50%;
+            margin-left: 5px;
+            border: 1px solid #333;
+        }
+        .indicator-image {
+            display: inline-block;
+            width: 35px;
+            height: 30px;
+            margin-left: 5px;
+            vertical-align: middle;
+            object-fit: contain;
+        }
+        .indicator-image-large {
+            width: 100px;
+            height: 100px;
+            object-fit: contain;
+            border: 2px solid #333;
+            border-radius: 8px;
+            display: block;
+            margin: 0 auto;
+        }
+        .indicator-video-large {
+            width: 100px;
+            height: 100px;
+            object-fit: contain;
+            border: 2px solid #333;
+            border-radius: 8px;
+            display: block;
+            margin: 0 auto;
+        }
+        .on {
+            background-color: #28a745;
+        }
+        .off {
+            background-color: #dc3545;
+        }
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+            vertical-align: middle;
+        }
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #dc3545;
+            transition: 0.4s;
+            border-radius: 34px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: 0.4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider {
+            background-color: #28a745;
+        }
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+        button {
+            margin: 2px;
+            padding: 8px 16px;
+            font-size: 16px;
+            cursor: pointer;
+            border: none;
+            border-radius: 4px;
+            background-color: #007bff;
+            color: white;
+            transition: background-color 0.2s;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .write-button {
+            padding: 6px 12px;
+            font-size: 14px;
+            margin-left: 5px;
+            vertical-align: middle;
+        }
+        input[type="number"] {
+            margin-left: 5px;
+            padding: 6px;
+            width: 80px;
+            font-size: 14px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            vertical-align: middle;
+        }
+        input[type="number"].error {
+            border-color: #dc3545;
+            background-color: #ffe6e6;
+        }
+        table {
+            width: 100%;
+            max-width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            font-size: 14px;
+            background: linear-gradient(180deg, #ffffff, #f9f9f9);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            border-radius: 8px;
+            table-layout: auto;
+        }
+        th, td {
+            padding: 1px;
+            text-align: center;
+            border-bottom: 1px solid #e0e0e0;
+            white-space: nowrap;
+            font-weight: bold;
+        }
+        th {
+            background: linear-gradient(90deg, #007bff, #0056b3);
+            color: white;
+            font-size: 14px;
+            text-transform: uppercase;
+        }
+        tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+        tr:hover {
+            background-color: #e9ecef;
+            transition: background-color 0.2s;
+        }
+        .flex-row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .flex-row .group {
+            flex: 1;
+            min-width: 300px;
+            max-width: 48%;
+            overflow-x: auto;
+        }
+        .page {
+            display: none;
+        }
+        .active {
+            display: block;
+        }
+        .nav-bar {
+            display: flex;
+            justify-content: center;
+            background-color: #007bff;
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        .nav-button {
+            margin: 0 10px;
+            padding: 10px 20px;
+            font-size: 20px;
+            background-color: #ffffff;
+            color: #007bff;
+            border: 1px solid #007bff;
+            border-radius: 4px;
+            font-weight: bold;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .nav-button:hover {
+            background-color: #0056b3;
+            color: white;
+        }
+        .nav-button.alarm-active {
+            color: #ffffff;
+            border-color: #dc3545;
+            background-color: #dc3545;
+            animation: attractiveBlink 1.5s infinite ease-in-out;
+        }
+        @keyframes attractiveBlink {
+            0% {
+                background-color: #dc3545;
+                box-shadow: 0 0 10px rgba(220, 53, 69, 0.8);
+                transform: scale(1);
+            }
+            50% {
+                background-color: #ff6200;
+                box-shadow: 0 0 20px rgba(255, 98, 0, 0.9);
+                transform: scale(1.05);
+            }
+            100% {
+                background-color: #dc3545;
+                box-shadow: 0 0 10px rgba(220, 53, 69, 0.8);
+                transform: scale(1);
+            }
+        }
+        .popup {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+        .popup-content {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            position: relative;
+        }
+        .popup-content h3 {
+            color: #dc3545;
+            margin-bottom: 15px;
+            text-align: center;
+            font-size: 20px;
+        }
+        .popup-content ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .popup-content li {
+            color: #dc3545;
+            font-size: 18px;
+            padding: 8px 0;
+            border-bottom: 1px solid #e0e0e0;
+            font-weight: bold;
+        }
+        .popup-content li:last-child {
+            border-bottom: none;
+        }
+        .close-button {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 8px 12px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .close-button:hover {
+            background-color: #b02a37;
+        }
+        #set-quantity .table-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        #set-quantity .column {
+            flex: 1;
+            min-width: 300px;
+            max-width: 50%;
+            display: flex;
+            flex-direction: column;
+            gap: 0px;
+        }
+        #set-quantity .column .group {
+            max-width: 100%;
+            overflow-x: auto;
+        }
+        #set-quantity .vfd-table {
+            overflow-x: auto;
+        }
+        #set-quantity .vfd-table table {
+            min-width: 600px;
+            table-layout: fixed;
+        }
+        #set-quantity .vfd-table th,
+        #set-quantity .vfd-table td {
+            width: 20%;
+            min-width: 100px;
+            white-space: normal;
+            text-align: center;
+            padding: 8px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            border-right: 1px solid #e0e0e0;
+        }
+        #set-quantity .vfd-table th {
+            font-size: 12px;
+            line-height: 1.2;
+        }
+        #set-quantity th:nth-child(2),
+        #set-quantity td:nth-child(2) {
+            width: 40%;
+            text-align: left;
+        }
+        #set-quantity th:nth-child(1),
+        #set-quantity td:nth-child(1) {
+            width: 10%;
+        }
+        #set-quantity th:nth-child(3),
+        #set-quantity td:nth-child(3),
+        #set-quantity th:nth-child(4),
+        #set-quantity td:nth-child(4),
+        #set-quantity th:nth-child(5),
+        #set-quantity td:nth-child(5) {
+            width: 15%;
+        }
+        #set-quantity .vfd-table th:nth-child(1),
+        #set-quantity .vfd-table td:nth-child(1),
+        #set-quantity .vfd-table th:nth-child(2),
+        #set-quantity .vfd-table td:nth-child(2),
+        #set-quantity .vfd-table th:nth-child(3),
+        #set-quantity .vfd-table td:nth-child(3),
+        #set-quantity .vfd-table th:nth-child(4),
+        #set-quantity .vfd-table td:nth-child(4),
+        #set-quantity .vfd-table th:nth-child(5),
+        #set-quantity .vfd-table td:nth-child(5) {
+            width: 20%;
+            text-align: center;
+        }
+        .general-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .general-container .group {
+            max-width: 100%;
+        }
+        footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background-color: #007bff;
+            color: white;
+            padding: 10px 0;
+            z-index: 1000;
+            box-shadow: 0 -2px 8px rgba(0,0,0,0.1);
+        }
+        .footer-actions {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            padding: 5px 10px;
+        }
+        .footer-action {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            background-color: #ffffff;
+            color: #007bff;
+            border: 1px solid #007bff;
+            border-radius: 4px;
+            padding: 5px 10px;
+            font-size: 14px;
+            font-weight: bold;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .footer-action:hover {
+            background-color: #0056b3;
+            color: white;
+        }
+        .footer-action .toggle-switch {
+            width: 50px;
+            height: 28px;
+        }
+        .footer-action .slider {
+            background-color: #dc3545;
+        }
+        .footer-action .slider:before {
+            height: 20px;
+            width: 20px;
+            left: 4px;
+            bottom: 4px;
+        }
+        .footer-action input:checked + .slider {
+            background-color: #28a745;
+        }
+        .footer-action input:checked + .slider:before {
+            transform: translateX(22px);
+        }
+        .footer-copyright {
+            text-align: center;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+        .status-button {
+            margin: 0 10px;
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #ffffff;
+            color: #007bff;
+            border: 1px solid #007bff;
+            border-radius: 4px;
+            font-weight: bold;
+            transition: transform 0.2s, box-shadow 0.2s;
+            text-align: left;
+            min-width: 200px;
+        }
+        .status-button:hover {
+            background-color: #0056b3;
+            color: white;
+        }
+        #bin-visibility-container {
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        #current-bin, #next-bin, #video-display {
+            min-width: 150px;
+            text-align: center;
+        }
+        #current-bin h4, #next-bin h4, #video-display h4 {
+            margin: 10px 0;
+            font-size: 18px;
+            color: #007bff;
+        }
+        #current-bin p, #next-bin p, #video-display p {
+            margin: 5px 0;
+            font-size: 16px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>SP PLC HMI</h1>
+
+    <div class="nav-bar">
+        <button class="nav-button" onclick="showPage('home')">HOME</button>
+        <button class="nav-button" onclick="showPage('set-quantity')">SET QUANTITY</button>
+        <button class="nav-button" id="alarm-button" onclick="toggleAlarmPopup()">ALARMS</button>
+        <button class="status-button">
+            VFD Fq: <span id="D512">0</span>
+        </button>
+        <button class="status-button">
+            Motor Pos: <span id="D302">0</span>
+        </button>
+    </div>
+
+    <div id="alarm-popup" class="popup">
+        <div class="popup-content">
+            <button class="close-button" onclick="toggleAlarmPopup()">Close</button>
+            <h3>Active Alarms</h3>
+            <ul id="alarm-list"></ul>
+        </div>
+    </div>
+
+    <div id="home" class="page active">
+        <div class="general-container">
+            <div class="group">
+                <h3>General - Read Values</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>SR NO</th>
+                            <th>Name</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>1</td>
+                            <td>EMG_STOP</td>
+                            <td><span class="indicator off" id="indicator-M9"></span></td>
+                        </tr>
+                        <tr>
+                            <td>5</td>
+                            <td>PLUNGER_ASSLY_AUTO_READY</td>
+                            <td><span class="indicator off" id="indicator-M300"></span></td>
+                        </tr>
+                        <tr>
+                            <td>6</td>
+                            <td>RING_FEEDER_ASSLY_AUTO_READY</td>
+                            <td><span class="indicator off" id="indicator-M400"></span></td>
+                        </tr>
+                        <tr>
+                            <td>7</td>
+                            <td>ARM_ASSLY_AUTO_READY</td>
+                            <td><span class="indicator off" id="indicator-M500"></span></td>
+                        </tr>
+                        <tr>
+                            <td>8</td>
+                            <td>PLUNGER_ASSLY_AUTO_ON</td>
+                            <td><span class="indicator off" id="indicator-M301"></span></td>
+                        </tr>
+                        <tr>
+                            <td>9</td>
+                            <td>RING_FEEDER_ASSLY_AUTO_ON</td>
+                            <td><span class="indicator off" id="indicator-M401"></span></td>
+                        </tr>
+                        <tr>
+                            <td>10</td>
+                            <td>ARM_ASSLY_AUTO_ON</td>
+                            <td><span class="indicator off" id="indicator-M501"></span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="group">
+                <h3>Bin Visibility</h3>
+                <div id="bin-visibility-container">
+                    <div id="current-bin">
+                        <h4>Current Bin</h4>
+                        <img id="current-bin-image" class="indicator-image-large" src="/static/ASSLY_IMAGES/off.jpeg" alt="Current Bin">
+                        <p id="current-bin-name">None</p>
+                    </div>
+                    <div id="next-bin">
+                        <h4>Next Bin</h4>
+                        <img id="next-bin-image" class="indicator-image-large" src="/static/ASSLY_IMAGES/off.jpeg" alt="Next Bin">
+                        <p id="next-bin-name">None</p>
+                    </div>
+                    <div id="video-display">
+                        <h4>Video Display</h4>
+                        <video id="video-display-video" class="indicator-video-large" autoplay loop muted playsinline src="/static/ASSLY_IMAGES/off.mp4"></video>
+                        <p id="video-display-name">None</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div style="display:none">
+            <!-- M200 to M248 -->
+            <span id="state-M200"></span><img class="indicator-image" id="indicator-M200" src="/static/ASSLY_IMAGES/off.png" alt="Indicator">
+            <span id="state-M201"></span><img class="indicator-image" id="indicator-M201" src="/static/ASSLY_IMAGES/off.png" alt="Indicator">
+            <span id="state-M202"></span><img class="indicator-image" id="indicator-M202" src="/static/ASSLY_IMAGES/off.png" alt="Indicator">
+            <span id="state-M203"></span><img class="indicator-image" id="indicator-M203" src="/static/ASSLY_IMAGES/off.png" alt="Indicator">
+            <span id="state-M204"></span><img class="indicator-image" id="indicator-M204" src="/static/ASSLY_IMAGES/off.png" alt="Indicator">
+            <span id="state-M205"></span><img class="indicator-image" id="indicator-M205" src="/static/ASSLY_IMAGES/off.png" alt="Indicator">
+            <span id="state-M206"></span><img class="indicator-image" id="indicator-M206" src="/static/ASSLY_IMAGES/off.png" alt="Indicator">
+            <span id="state-M207"></span><img class="indicator-image" id="indicator-M207" src="/static/ASSLY_IMAGES/off.png" alt="Indicator">
+            <span id="state-M208"></span><img class="indicator-image" id="indicator-M208" src="/static/ASSLY_IMAGES/off.png" alt="Indicator">
+            <span id="state-M209"></span><img class="indicator-image" id="indicator-M209" src="/static/ASSLY_IMAGES/off.png" alt="Indicator">
+            <span id="state-M210"></span><img class="indicator-image" id="indicator-M210" src="/static/ASSLY_IMAGES/off.png" alt="Indicator">
+            <span id="state-M211"></span><img class="indicator-image" id="indicator-M211" src="/static/ASSLY_IMAGES/off.png" alt="Indicator">
+            <span id="state-M212"></span><img class="indicator-image" id="indicator-M212" src="/static/ASSLY_IMAGES/off.png" alt="Indicator">
+            <span id="state-M213"></span><img class="indicator-image" id="indicator-M213" src="/static/ASSLY_IMAGES/off.png" alt="Indicator">
+            <span id="state-M214"></span><img class="indicator-image" id="indicator-M214" src="/static/ASSLY_IMAGES/off.png" alt="Indicator">
+            <span id="state-M215"></span><img class="indicator-image" id="indicator-M215" src="/static/ASSLY_IMAGES/off.png" alt="Indicator">
+            <span id="state-M216"></span><img class="indicator-image" id="indicator-M216" src="/static/ASSLY_IMAGES/off.png" alt="Indicator">
+            <span id="state-M217"></span><img class="indicator-image" id="indicator-M217" src="/static/ASSLY_IMAGES/off.png" alt="Indicator">
+            <span id="state-M218"></span><img class="indicator-image" id="indicator-M218" src="/static/ASSLY_IMAGES/off.png" alt="Indicator">
+            <span id="state-M219"></span><img class="indicator-image" id="indicator-M219" src="/static/ASSLY_IMAGES/off.png" alt="Indicator">
+            <span id="state-M220"></span><img class="indicator-image" id="indicator-M220" src="/static/ASSLY_IMAGES/off.png" alt="Indicator">
+            <span id="state-M221"></span><img class="indicator-image" id="indicator-M221" src="/static/ASSLY_IMAGES/off.png" alt="Indicator">
+            <span id="state-M222"></span><img class="indicator-image" id="indicator-M222" src="/static/ASSLY_IMAGES/off.png" alt="Indicator">
+            <span id="state-M223"></span><img class="indicator-image" id="indicator-M223" src="/static/ASSLY_IMAGES/off.png" alt="Indicator">
+            <span id="state-M224"></span><img class="indicator-image" id="indicator-M224" src="/static/ASSLY_IMAGES/off.png" alt="Indicator">
+            <span id="state-M225"></span><img class="indicator-image" id="indicator-M225" src="/static/ASSLY_IMAGES/off.png" alt="Indicator">
+            <span id="state-M226"></span><img class="indicator-image" id="indicator-M226" src="/static/ASSLY_IMAGES/off.png" alt="Indicator">
+            <span id="state-M227"></span><img class="indicator-image" id="indicator-M227" src="/static/ASSLY_IMAGES/off.png" alt="Indicator">
+            <span id="state-M228"></span><img class="indicator-image" id="indicator-M228" src="/static/ASSLY_IMAGES/off.png" alt="Indicator">
+            <span id="state-M229"></span><img class="indicator-image" id="indicator-M229" src="/static/ASSLY_IMAGES/off.png" alt="Indicator">
+            <span id="state-M230"></span><img class="indicator-image" id="indicator-M230" src="/static/ASSLY_IMAGES/off.png" alt="Indicator">
+            <span id="state-M231"></span><img class="indicator-image" id="indicator-M231" src="/static/ASSLY_IMAGES/off.png" alt="Indicator">
+            <span id="state-M232"></span><img class="indicator-image" id="indicator-M232" src="/static/ASSLY_IMAGES/off.png" alt="Indicator">
+            <span id="state-M233"></span><img class="indicator-image" id="indicator-M233" src="/static/ASSLY_IMAGES/off.png" alt="Indicator">
+            <span id="state-M234"></span><img class="indicator-image" id="indicator-M234" src="/static/ASSLY_IMAGES/off.png" alt="Indicator">
+            <span id="state-M235"></span><img class="indicator-image" id="indicator-M235" src="/static/ASSLY_IMAGES/off.png" alt="Indicator">
+            <span id="state-M236"></span><img class="indicator-image" id="indicator-M236" src="/static/ASSLY_IMAGES/off.png" alt="Indicator">
+            <span id="state-M237"></span><img class="indicator-image" id="indicator-M237" src="/static/ASSLY_IMAGES/off.png" alt="Indicator">
+            <span id="state-M238"></span><img class="indicator-image" id="indicator-M238" src="/static/ASSLY_IMAGES/off.png" alt="Indicator">
+            <span id="state-M239"></span><img class="indicator-image" id="indicator-M239" src="/static/ASSLY_IMAGES/off.png" alt="Indicator">
+            <span id="state-M240"></span><img class="indicator-image" id="indicator-M240" src="/static/ASSLY_IMAGES/off.png" alt="Indicator">
+            <span id="state-M241"></span><img class="indicator-image" id="indicator-M241" src="/static/ASSLY_IMAGES/off.png" alt="Indicator">
+            <span id="state-M242"></span><img class="indicator-image" id="indicator-M242" src="/static/ASSLY_IMAGES/off.png" alt="Indicator">
+            <span id="state-M243"></span><img class="indicator-image" id="indicator-M243" src="/static/ASSLY_IMAGES/off.png" alt="Indicator">
+            <span id="state-M244"></span><img class="indicator-image" id="indicator-M244" src="/static/ASSLY_IMAGES/off.png" alt="Indicator">
+            <span id="state-M245"></span><img class="indicator-image" id="indicator-M245" src="/static/ASSLY_IMAGES/off.png" alt="Indicator">
+            <span id="state-M246"></span><img class="indicator-image" id="indicator-M246" src="/static/ASSLY_IMAGES/off.png" alt="Indicator">
+            <span id="state-M247"></span><img class="indicator-image" id="indicator-M247" src="/static/ASSLY_IMAGES/off.png" alt="Indicator">
+            <span id="state-M248"></span><img class="indicator-image" id="indicator-M248" src="/static/ASSLY_IMAGES/off.png" alt="Indicator">
+        </div>
+    </div>
+
+    <div id="set-quantity" class="page">
+        <div class="group vfd-table">
+            <h3>VFD & Motor Parameter Settings</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>VFD_WRITE</th>
+                        <th>SERVO_MAN_TRQ_FRM</th>
+                        <th>SERVO_AUTO_TRQ_FRM</th>
+                        <th>PLUNGER_HOLD_TIME</th>
+                        <th>SERVO_FWD_TIME</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><span id="D500">0</span>
+                        <input type="number" id="D500_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D500', 'D500_input')">Write</button></td>
+                        <td><span id="D520">0</span>
+                        <input type="number" id="D520_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D520', 'D520_input')">Write</button></td>
+                        <td><span id="D524">0</span>
+                        <input type="number" id="D524_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D524', 'D524_input')">Write</button></td>
+                        <td><span id="D304">0</span>
+                        <input type="number" id="D304_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D304', 'D304_input')">Write</button></td>
+                        <td><span id="D306">0</span>
+                        <input type="number" id="D306_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D306', 'D306_input')">Write</button></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="table-container">
+            <div class="column">
+                <div class="group">
+                    <h3>Plunger Assembly</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>BIN NO</th>
+                                <th>Name</th>
+                                <th>Recipe (W)</th>
+                                <th>Act Qty (R)</th>
+                                <th>Set Qty (W)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>1</td>
+                                <td>PLUNGER_HSG_ARM_BT_40</td>
+                                <td><span id="D310">0</span> <input type="number" id="D310_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D310', 'D310_input')">Write</button></td>
+                                <td><span id="D410">0</span></td>
+                                <td><span id="D610">0</span> <input type="number" id="D610_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D610', 'D610_input')">Write</button></td>
+                            </tr>
+                            <tr>
+                                <td>2</td>
+                                <td>OIL_SEAL_OS15X21X3_IKO_MAKE</td>
+                                <td><span id="D312">0</span> <input type="number" id="D312_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D312', 'D312_input')">Write</button></td>
+                                <td><span id="D412">0</span></td>
+                                <td><span id="D612">0</span> <input type="number" id="D612_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D612', 'D612_input')">Write</button></td>
+                            </tr>
+                            <tr>
+                                <td>3</td>
+                                <td>PLUNGER_ARM_BT40</td>
+                                <td><span id="D314">0</span> <input type="number" id="D314_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D314', 'D314_input')">Write</button></td>
+                                <td><span id="D414">0</span></td>
+                                <td><span id="D614">0</span> <input type="number" id="D614_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D614', 'D614_input')">Write</button></td>
+                            </tr>
+                            <tr>
+                                <td>4</td>
+                                <td>PARALLEL_KEY_4X4X12</td>
+                                <td><span id="D316">0</span> <input type="number" id="D316_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D316', 'D316_input')">Write</button></td>
+                                <td><span id="D416">0</span></td>
+                                <td><span id="D616">0</span> <input type="number" id="D616_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D616', 'D616_input')">Write</button></td>
+                            </tr>
+                            <tr>
+                                <td>5</td>
+                                <td>SPRING_PLUNGER_BT_40_ARM</td>
+                                <td><span id="D318">0</span> <input type="number" id="D318_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D318', 'D318_input')">Write</button></td>
+                                <td><span id="D418">0</span></td>
+                                <td><span id="D618">0</span> <input type="number" id="D618_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D618', 'D618_input')">Write</button></td>
+                            </tr>
+                            <tr>
+                                <td>6</td>
+                                <td>PLUNGERNUT_ARM_BT_40</td>
+                                <td><span id="D320">0</span> <input type="number" id="D320_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D320', 'D320_input')">Write</button></td>
+                                <td><span id="D420">0</span></td>
+                                <td><span id="D620">0</span> <input type="number" id="D620_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D620', 'D620_input')">Write</button></td>
+                            </tr>
+                            <tr>
+                                <td>7</td>
+                                <td>O_RING_23X15</td>
+                                <td><span id="D322">0</span> <input type="number" id="D322_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D322', 'D322_input')">Write</button></td>
+                                <td><span id="D422">0</span></td>
+                                <td><span id="D622">0</span> <input type="number" id="D622_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D622', 'D622_input')">Write</button></td>
+                            </tr>
+                            <tr>
+                                <td>8</td>
+                                <td>O_RING_28X2</td>
+                                <td><span id="D324">0</span> <input type="number" id="D324_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D324', 'D324_input')">Write</button></td>
+                                <td><span id="D424">0</span></td>
+                                <td><span id="D624">0</span> <input type="number" id="D624_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D624', 'D624_input')">Write</button></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="group">
+                    <h3>Ring Feeder Assembly</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>BIN NO</th>
+                                <th>Name</th>
+                                <th>Recipe (W)</th>
+                                <th>Act Qty (R)</th>
+                                <th>Set Qty (W)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>1</td>
+                                <td>RING_FEEDER_HSG_BT40</td>
+                                <td><span id="D326">0</span> <input type="number" id="D326_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D326', 'D326_input')">Write</button></td>
+                                <td><span id="D426">0</span></td>
+                                <td><span id="D626">0</span> <input type="number" id="D626_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D626', 'D626_input')">Write</button></td>
+                            </tr>
+                            <tr>
+                                <td>2</td>
+                                <td>RING_FEEDER_SPACER_ATC</td>
+                                <td><span id="D328">0</span> <input type="number" id="D328_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D328', 'D328_input')">Write</button></td>
+                                <td><span id="D428">0</span></td>
+                                <td><span id="D628">0</span> <input type="number" id="D628_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D628', 'D628_input')">Write</button></td>
+                            </tr>
+                            <tr>
+                                <td>3</td>
+                                <td>BTP80_LOCKING_ELEMENT_35X40</td>
+                                <td><span id="D330">0</span> <input type="number" id="D330_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D330', 'D330_input')">Write</button></td>
+                                <td><span id="D430">0</span></td>
+                                <td><span id="D630">0</span> <input type="number" id="D630_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D630', 'D630_input')">Write</button></td>
+                            </tr>
+                            <tr>
+                                <td>4</td>
+                                <td>RING_FEEDER_CLAMP_BT40</td>
+                                <td><span id="D332">0</span> <input type="number" id="D332_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D332', 'D332_input')">Write</button></td>
+                                <td><span id="D432">0</span></td>
+                                <td><span id="D632">0</span> <input type="number" id="D632_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D632', 'D632_input')">Write</button></td>
+                            </tr>
+                            <tr>
+                                <td>5</td>
+                                <td>SOC_HD_SCREW_6X25</td>
+                                <td><span id="D334">0</span> <input type="number" id="D334_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D334', 'D334_input')">Write</button></td>
+                                <td><span id="D434">0</span></td>
+                                <td><span id="D634">0</span> <input type="number" id="D634_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D634', 'D634_input')">Write</button></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="column">
+                <div class="group">
+                    <h3>Arm Assembly</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>BIN NO</th>
+                                <th>Name</th>
+                                <th>Recipe (W)</th>
+                                <th>Act Qty (R)</th>
+                                <th>Set Qty (W)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>1</td>
+                                <td>ARM_BODY_225</td>
+                                <td><span id="D336">0</span> <input type="number" id="D336_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D336', 'D336_input')">Write</button></td>
+                                <td><span id="D436">0</span></td>
+                                <td><span id="D636">0</span> <input type="number" id="D636_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D636', 'D636_input')">Write</button></td>
+                            </tr>
+                            <tr>
+                                <td>2</td>
+                                <td>LFB_1820_DU_BUSH_18XOD_20XL_20</td>
+                                <td><span id="D338">0</span> <input type="number" id="D338_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D338', 'D338_input')">Write</button></td>
+                                <td><span id="D438">0</span></td>
+                                <td><span id="D638">0</span> <input type="number" id="D638_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D638', 'D638_input')">Write</button></td>
+                            </tr>
+                            <tr>
+                                <td>3</td>
+                                <td>LFB_1215_DU_BUSH_12XOD_14XL_15</td>
+                                <td><span id="D340">0</span> <input type="number" id="D340_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D340', 'D340_input')">Write</button></td>
+                                <td><span id="D440">0</span></td>
+                                <td><span id="D640">0</span> <input type="number" id="D640_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D640', 'D640_input')">Write</button></td>
+                            </tr>
+                            <tr>
+                                <td>4</td>
+                                <td>OIL_SEAL_OS18X26X4_IKO_MAKE</td>
+                                <td><span id="D342">0</span> <input type="number" id="D342_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D342', 'D342_input')">Write</button></td>
+                                <td><span id="D442">0</span></td>
+                                <td><span id="D642">0</span> <input type="number" id="D642_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D642', 'D642_input')">Write</button></td>
+                            </tr>
+                            <tr>
+                                <td>5</td>
+                                <td>SOC_HD_SCREW_6X30</td>
+                                <td><span id="D348">0</span> <input type="number" id="D348_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D348', 'D348_input')">Write</button></td>
+                                <td><span id="D444">0</span></td>
+                                <td><span id="D644">0</span> <input type="number" id="D644_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D644', 'D644_input')">Write</button></td>
+                            </tr>
+                            <tr>
+                                <td>6</td>
+                                <td>PUSHROD_225</td>
+                                <td><span id="D350">0</span> <input type="number" id="D350_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D350', 'D350_input')">Write</button></td>
+                                <td><span id="D446">0</span></td>
+                                <td><span id="D646">0</span> <input type="number" id="D646_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D646', 'D646_input')">Write</button></td>
+                            </tr>
+                            <tr>
+                                <td>7</td>
+                                <td>SPRING_PUSHROAD_BT40</td>
+                                <td><span id="D352">0</span> <input type="number" id="D352_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D352', 'D352_input')">Write</button></td>
+                                <td><span id="D448">0</span></td>
+                                <td><span id="D648">0</span> <input type="number" id="D648_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D648', 'D648_input')">Write</button></td>
+                            </tr>
+                            <tr>
+                                <td>8</td>
+                                <td>ANTIROTATION_KEY</td>
+                                <td><span id="D354">0</span> <input type="number" id="D354_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D354', 'D354_input')">Write</button></td>
+                                <td><span id="D450">0</span></td>
+                                <td><span id="D650">0</span> <input type="number" id="D650_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D650', 'D650_input')">Write</button></td>
+                            </tr>
+                            <tr>
+                                <td>9</td>
+                                <td>ORING_12X2</td>
+                                <td><span id="D356">0</span> <input type="number" id="D356_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D356', 'D356_input')">Write</button></td>
+                                <td><span id="D452">0</span></td>
+                                <td><span id="D652">0</span> <input type="number" id="D652_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D652', 'D652_input')">Write</button></td>
+                            </tr>
+                            <tr>
+                                <td>10</td>
+                                <td>SOC_HD_SCREW_5X10</td>
+                                <td><span id="D358">0</span> <input type="number" id="D358_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D358', 'D358_input')">Write</button></td>
+                                <td><span id="D454">0</span></td>
+                                <td><span id="D654">0</span> <input type="number" id="D654_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D654', 'D654_input')">Write</button></td>
+                            </tr>
+                            <tr>
+                                <td>11</td>
+                                <td>GRIPPER_PLT_BT40_16MNCR5</td>
+                                <td><span id="D360">0</span> <input type="number" id="D360_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D360', 'D360_input')">Write</button></td>
+                                <td><span id="D456">0</span></td>
+                                <td><span id="D656">0</span> <input type="number" id="D656_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D656', 'D656_input')">Write</button></td>
+                            </tr>
+                            <tr>
+                                <td>12</td>
+                                <td>SOC_HD_SCREW_8X20</td>
+                                <td><span id="D362">0</span> <input type="number" id="D362_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D362', 'D362_input')">Write</button></td>
+                                <td><span id="D458">0</span></td>
+                                <td><span id="D658">0</span> <input type="number" id="D658_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D658', 'D658_input')">Write</button></td>
+                            </tr>
+                            <tr>
+                                <td>13</td>
+                                <td>ITCP_PIN_8X25</td>
+                                <td><span id="D364">0</span> <input type="number" id="D364_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D364', 'D364_input')">Write</button></td>
+                                <td><span id="D460">0</span></td>
+                                <td><span id="D660">0</span> <input type="number" id="D660_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D660', 'D660_input')">Write</button></td>
+                            </tr>
+                            <tr>
+                                <td>14</td>
+                                <td>ARM_KEY_SK40</td>
+                                <td><span id="D366">0</span> <input type="number" id="D366_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D366', 'D366_input')">Write</button></td>
+                                <td><span id="D462">0</span></td>
+                                <td><span id="D662">0</span> <input type="number" id="D662_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D662', 'D662_input')">Write</button></td>
+                            </tr>
+                            <tr>
+                                <td>15</td>
+                                <td>CSK_SCREW_6X10</td>
+                                <td><span id="D368">0</span> <input type="number" id="D368_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D368', 'D368_input')">Write</button></td>
+                                <td><span id="D464">0</span></td>
+                                <td><span id="D664">0</span> <input type="number" id="D664_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D664', 'D664_input')">Write</button></td>
+                            </tr>
+                            <tr>
+                                <td>16</td>
+                                <td>SPARE_RING_FEEDER_HSG_ASSY_40SERIES</td>
+                                <td><span id="D344">0</span> <input type="number" id="D344_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D344', 'D344_input')">Write</button></td>
+                                <td><span id="D466">0</span></td>
+                                <td><span id="D666">0</span> <input type="number" id="D666_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D666', 'D666_input')">Write</button></td>
+                            </tr>
+                            <tr>
+                                <td>17</td>
+                                <td>SPARE_PLUNGER_HSG_ASSY_40_SERIES</td>
+                                <td><span id="D346">0</span> <input type="number" id="D346_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D346', 'D346_input')">Write</button></td>
+                                <td><span id="D468">0</span></td>
+                                <td><span id="D668">0</span> <input type="number" id="D668_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D668', 'D668_input')">Write</button></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="footer-actions">
+            <div class="footer-action">
+                <span>PLUNGER HOME</span>
+                <label class="toggle-switch"><input type="checkbox" id="footer-toggle-M805"><span class="slider"></span></label>
+            </div>
+            <div class="footer-action">
+                <span>RING FEEDER HOME</span>
+                <label class="toggle-switch"><input type="checkbox" id="footer-toggle-M806"><span class="slider"></span></label>
+            </div>
+            <div class="footer-action">
+                <span>ARM HOME</span>
+                <label class="toggle-switch"><input type="checkbox" id="footer-toggle-M807"><span class="slider"></span></label>
+            </div>
+            <div class="footer-action">
+                <span>PLUNGER SELECT</span>
+                <label class="toggle-switch"><input type="checkbox" id="footer-toggle-L100"><span class="slider"></span></label>
+            </div>
+            <div class="footer-action">
+                <span>RING FEEDER SELECT</span>
+                <label class="toggle-switch"><input type="checkbox" id="footer-toggle-L101"><span class="slider"></span></label>
+            </div>
+            <div class="footer-action">
+                <span>ARM SELECT</span>
+                <label class="toggle-switch"><input type="checkbox" id="footer-toggle-L102"><span class="slider"></span></label>
+            </div>
+            <div class="footer-action">
+                <span>DATA LOAD</span>
+                <label class="toggle-switch"><input type="checkbox" id="footer-toggle-M7"><span class="slider"></span></label>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        const socket = io();
+        const alarmTags = [
+            { tag: 'M200', name: 'MAIN_EMG_STOP' },
+            { tag: 'M201', name: 'PLUNGER_ASSLY_EMG_STOP' },
+            { tag: 'M202', name: 'RING_FEEDER_ASSLY_EMG_STOP' },
+            { tag: 'M203', name: 'ARM_ASSLY_EMG_STOP' },
+            { tag: 'M204', name: 'INDEXER_MOTOR_TRIP' },
+            { tag: 'M205', name: 'ARM_MPCB_TRIP' },
+            { tag: 'M206', name: 'SERVO_MOTOR_TRIP' },
+            { tag: 'M207', name: 'PLUNGER_ASSLY_CYL_FWD_RD' },
+            { tag: 'M208', name: 'PLUNGER_ASSLY_CYL_REV_RD' },
+            { tag: 'M209', name: 'CYL_UP_RING_FEEDER_ASSLY_FWD_RD' },
+            { tag: 'M210', name: 'CYL_UP_RING_FEEDER_ASSLY_REV_RD' },
+            { tag: 'M211', name: 'CYL_DOWN_RING_FEEDER_ASSLY_FWD_RD' },
+            { tag: 'M212', name: 'CYL_DOWN_RING_FEEDER_ASSLY_REV_RD' },
+            { tag: 'M213', name: 'FLP_CYL_CLOSE_FWD_RD' },
+            { tag: 'M214', name: 'FLP_CYL_OPEN_REV_RD' },
+            { tag: 'M215', name: 'CYL5_FWD_RD' },
+            { tag: 'M216', name: 'CYL5_REV_RD' },
+            { tag: 'M217', name: 'CYL6_FWD_RD' },
+            { tag: 'M218', name: 'CYL6_REV_RD' },
+            { tag: 'M219', name: 'PLUNGER_HSG_ARM_BT40_EMPTY' },
+            { tag: 'M220', name: 'OIL_SEAL_OS15X21X3_IKO_MAKE_EMPTY' },
+            { tag: 'M221', name: 'PLUNGER_ARM_BT40_EMPTY' },
+            { tag: 'M222', name: 'PARALLEL_KEY_4X4X12_EMPTY' },
+            { tag: 'M223', name: 'SPRING_PLUNGER_BT40_ARM_EMPTY' },
+            { tag: 'M224', name: 'PLUNGERNUT_ARM_BT40_EMPTY' },
+            { tag: 'M225', name: 'O_RING_23X1_5_EMPTY' },
+            { tag: 'M226', name: 'O_RING_28X2_EMPTY' },
+            { tag: 'M227', name: 'RING_FEEDER_HSG_BT40_EMPTY' },
+            { tag: 'M228', name: 'RING_FEDER_SPACER_EMPTY' },
+            { tag: 'M229', name: 'BTP_80_LOCKING_ELEMENT_35X40_EMPTY' },
+            { tag: 'M230', name: 'RING_FEEDER_CLAMP_BT40_EMPTY' },
+            { tag: 'M231', name: 'SOC_HD_SCREW_6X25_EMPTY' },
+            { tag: 'M232', name: 'ARM_BODY_225_EMPTY' },
+            { tag: 'M233', name: 'LFB_1820_DU_BUSH_18XOD_20XL_20_EMPTY' },
+            { tag: 'M234', name: 'LFB_1215_DU_BUSH_12XOD_14XL_15_EMPTY' },
+            { tag: 'M235', name: 'OIL_SEAL_OS18X26X4_IKO_MAKE_EMPTY' },
+            { tag: 'M236', name: 'RING_FEEDER_HSG_ASSY_40SERIES_EMPTY' },
+            { tag: 'M237', name: 'PLUNGER_HSG_ASSY_40SERIES_EMPTY' },
+            { tag: 'M238', name: 'SOC_HD_SCREW_6X30_BIN_18_EMPTY' },
+            { tag: 'M239', name: 'PUSHROD_225_BIN_19_EMPTY' },
+            { tag: 'M240', name: 'SPRING_PUSHROD_BT40_EMPTY' },
+            { tag: 'M241', name: 'ANTI_ROTATION_KEY_EMPTY' },
+            { tag: 'M242', name: 'O_RING_12X2_EMPTY' },
+            { tag: 'M243', name: 'SOC_HD_SCREW_5X10_EMPTY' },
+            { tag: 'M244', name: 'GRIPPER_PLT_BT40_16_MNCR5_EMPTY' },
+            { tag: 'M245', name: 'SOC_HD_SCREW_8X20_EMPTY' },
+            { tag: 'M246', name: 'ITCP_PIN_8X25_EMPTY' },
+            { tag: 'M247', name: 'ARM_KEY_SK40_EMPTY' },
+            { tag: 'M248', name: 'CSK_SCREW_6X10_EMPTY' }
+        ];
+
+        const imageMap = {
+            '1': { image: '/static/ASSLY_IMAGES/1.jpeg', name: 'PLUNGER_HSG_ARM_BT_40' },
+            '2': { image: '/static/ASSLY_IMAGES/2.jpeg', name: 'OIL_SEAL_OS15X21X3_IKO_MAKE' },
+            '3': { image: '/static/ASSLY_IMAGES/3.jpeg', name: 'PLUNGER_ARM_BT40' },
+            '4': { image: '/static/ASSLY_IMAGES/4.jpeg', name: 'PARALLEL_KEY_4X4X12' },
+            '5': { image: '/static/ASSLY_IMAGES/5.jpeg', name: 'SPRING_PLUNGER_BT_40_ARM' },
+            '6': { image: '/static/ASSLY_IMAGES/6.jpeg', name: 'PLUNGERNUT_ARM_BT_40' },
+            '7': { image: '/static/ASSLY_IMAGES/7.jpeg', name: 'O_RING_23X15' },
+            '8': { image: '/static/ASSLY_IMAGES/8.jpeg', name: 'O_RING_28X2' },
+            '9': { image: '/static/ASSLY_IMAGES/9.jpeg', name: 'RING_FEEDER_HSG_BT40' },
+            '10': { image: '/static/ASSLY_IMAGES/10.jpeg', name: 'RING_FEEDER_SPACER_ATC' },
+            '11': { image: '/static/ASSLY_IMAGES/11.jpeg', name: 'BTP80_LOCKING_ELEMENT_35X40' },
+            '12': { image: '/static/ASSLY_IMAGES/12.jpeg', name: 'RING_FEEDER_CLAMP_BT40' },
+            '13': { image: '/static/ASSLY_IMAGES/13.jpeg', name: 'SOC_HD_SCREW_6X25' },
+            '14': { image: '/static/ASSLY_IMAGES/14.jpeg', name: 'ARM_BODY_225' },
+            '15': { image: '/static/ASSLY_IMAGES/15.jpeg', name: 'LFB_1820_DU_BUSH_18XOD_20XL_20' },
+            '16': { image: '/static/ASSLY_IMAGES/16.jpeg', name: 'LFB_1215_DU_BUSH_12XOD_14XL_15' },
+            'default': { image: '/static/ASSLY_IMAGES/off.jpeg', name: 'None' }
+        };
+
+        const videoMap = {
+            '1': { video: '/static/ASSLY_IMAGES/1. Ring feeder assly.mp4', name: 'Ring Feeder Assembly' },
+            '2': { video: '/static/ASSLY_IMAGES/2. plunger assly.mp4', name: 'Plunger Assembly' },
+            '3': { video: '/static/ASSLY_IMAGES/3.Arm assly.mp4', name: 'Arm Assembly' },
+            'default': { video: '/static/ASSLY_IMAGES/off.mp4', name: 'None' }
+        };
+
+        socket.on('connect', () => {
+            console.log('Connected to server');
+        });
+
+        socket.on('disconnect', () => {
+            console.log('Disconnected from server');
+        });
+
+        socket.on('plc_data', (data) => {
+            if (data.error) {
+                console.error('PLC Data Error:', data.error);
+                return;
+            }
+
+            let hasActiveAlarms = false;
+
+            // Handle Bin Visibility with D552 (current), D554 (next), and D550 (video)
+            const currentBinValue = data.words['D552'] || 0;
+            const nextBinValue = data.words['D554'] || 0;
+            const videoValue = data.words['D550'] || 0;
+
+            const currentBin = imageMap[currentBinValue] || imageMap['default'];
+            const nextBin = imageMap[nextBinValue] || imageMap['default'];
+            const videoDisplay = videoMap[videoValue] || videoMap['default'];
+
+            // Update current bin image
+            const currentBinImage = document.getElementById('current-bin-image');
+            const currentBinName = document.getElementById('current-bin-name');
+            if (currentBinImage.src !== window.location.origin + currentBin.image) {
+                currentBinImage.src = currentBin.image;
+            }
+            currentBinName.textContent = currentBin.name;
+
+            // Update next bin image
+            const nextBinImage = document.getElementById('next-bin-image');
+            const nextBinName = document.getElementById('next-bin-name');
+            if (nextBinImage.src !== window.location.origin + nextBin.image) {
+                nextBinImage.src = nextBin.image;
+            }
+            nextBinName.textContent = nextBin.name;
+
+            // Update video display
+            const videoDisplayVideo = document.getElementById('video-display-video');
+            const videoDisplayName = document.getElementById('video-display-name');
+            if (videoDisplayVideo.src !== window.location.origin + videoDisplay.video) {
+                videoDisplayVideo.src = videoDisplay.video;
+                videoDisplayVideo.load();
+                videoDisplayVideo.play().catch(e => console.error('Video display play error:', e));
+            }
+            videoDisplayName.textContent = videoDisplay.name;
+
+            // Update other indicators (non-bin, e.g., M9, M300)
+            for (let tag in data.bits) {
+                const indicatorElement = document.getElementById(`indicator-${tag}`);
+                const footerToggleElement = document.getElementById(`footer-toggle-${tag}`);
+                if (indicatorElement) {
+                    if (indicatorElement.tagName === 'SPAN') {
+                        indicatorElement.className = `indicator ${data.bits[tag] ? 'on' : 'off'}`;
+                    } else if (indicatorElement.tagName === 'IMG') {
+                        indicatorElement.src = data.bits[tag] ? '/static/ASSLY_IMAGES/on.png' : '/static/ASSLY_IMAGES/off.png';
+                    }
+                }
+                if (footerToggleElement) {
+                    footerToggleElement.checked = data.bits[tag];
+                    footerToggleElement.disabled = false;
+                }
+                if (alarmTags.some(alarm => alarm.tag === tag && data.bits[tag])) {
+                    hasActiveAlarms = true;
+                }
+            }
+
+            // Update alarms
+            const alarmList = document.getElementById('alarm-list');
+            alarmList.innerHTML = '';
+            alarmTags.forEach(alarm => {
+                if (data.bits[alarm.tag]) {
+                    const li = document.createElement('li');
+                    li.textContent = alarm.name;
+                    alarmList.appendChild(li);
+                }
+            });
+
+            const alarmButton = document.getElementById('alarm-button');
+            alarmButton.classList.toggle('alarm-active', hasActiveAlarms);
+            alarmButton.textContent = hasActiveAlarms ? 'ALARMS ⚠️' : 'ALARMS';
+
+            // Update word values (including D550, D552, D554)
+            for (let tag in data.words) {
+                const element = document.getElementById(tag);
+                if (element) {
+                    element.textContent = data.words[tag];
+                }
+            }
+        });
+
+        socket.on('write_response', (response) => {
+            if (response.status === 'success') {
+                console.log(`Successfully wrote ${response.value} to ${response.tag}`);
+                const input = document.getElementById(`${response.tag}_input`);
+                if (input) input.classList.remove('error');
+            } else {
+                console.error(`Failed to write to ${response.tag}: ${response.message}`);
+                const input = document.getElementById(`${response.tag}_input`);
+                if (input) input.classList.add('error');
+            }
+        });
+
+        function debounce(func, delay) {
+            let timeout;
+            return function (...args) {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func(...args), delay);
+            };
+        }
+
+        const toggleBit = debounce((tag) => {
+            const toggle = document.getElementById(`footer-toggle-${tag}`);
+            if (toggle) {
+                const value = toggle.checked;
+                socket.emit('toggle_bit', { tag, value });
+                console.log(`Toggling bit ${tag}: ${value}`);
+            }
+        }, 300);
+
+        function writeWord(tag, inputId) {
+            const input = document.getElementById(inputId);
+            if (input) {
+                const value = parseInt(input.value, 10);
+                if (!isNaN(value) && value >= 0 && value <= 99999) {
+                    socket.emit('write_word', { tag, value });
+                    console.log(`Writing word ${tag}: ${value}`);
+                } else {
+                    input.classList.add('error');
+                    console.error(`Invalid value for ${tag}: ${input.value}`);
+                }
+            }
+        }
+
+        function showPage(pageId) {
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.remove('active');
+            });
+            document.getElementById(pageId).classList.add('active');
+            document.querySelectorAll('.nav-button').forEach(button => {
+                button.classList.remove('active');
+            });
+            document.querySelector(`.nav-button[onclick="showPage('${pageId}')"]`).classList.add('active');
+        }
+
+        function toggleAlarmPopup() {
+            const popup = document.getElementById('alarm-popup');
+            popup.style.display = popup.style.display === 'flex' ? 'none' : 'flex';
+        }
+
+        // Attach event listeners to footer toggles
+        document.querySelectorAll('.footer-action input[type="checkbox"]').forEach(toggle => {
+            toggle.addEventListener('change', () => {
+                const tag = toggle.id.replace('footer-toggle-', '');
+                toggleBit(tag);
+            });
+        });
+
+        // Initialize page
+        showPage('home');
+    </script>
+</body>
+</html>
