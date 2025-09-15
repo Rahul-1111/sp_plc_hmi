@@ -53,8 +53,9 @@
             object-fit: contain;
         }
         .indicator-image-large {
-            width: 100px;
-            height: 100px;
+            width: 100%;
+            max-width: 300px;
+            height: auto;
             object-fit: contain;
             border: 2px solid #333;
             border-radius: 8px;
@@ -62,8 +63,9 @@
             margin: 0 auto;
         }
         .indicator-video-large {
-            width: 100px;
-            height: 100px;
+            width: 100%;
+            max-width: 400px;
+            height: auto;
             object-fit: contain;
             border: 2px solid #333;
             border-radius: 8px;
@@ -376,11 +378,51 @@
         }
         .general-container {
             display: flex;
+            flex-direction: row;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        .general-read-values {
+            flex: 0 0 35%;
+            max-width: 35%;
+            min-width: 300px;
+        }
+        .bin-visibility-group {
+            flex: 1;
+            min-width: 300px;
+        }
+        #bin-visibility-container {
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            display: flex;
             flex-direction: column;
             gap: 20px;
         }
-        .general-container .group {
-            max-width: 100%;
+        #video-display {
+            text-align: center;
+        }
+        .bin-images-container {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        #current-bin, #next-bin {
+            flex: 1;
+            min-width: 200px;
+            text-align: center;
+        }
+        #current-bin h4, #next-bin h4, #video-display h4 {
+            margin: 10px 0;
+            font-size: 18px;
+            color: #007bff;
+        }
+        #current-bin p, #next-bin p, #video-display p {
+            margin: 5px 0;
+            font-size: 16px;
+            font-weight: bold;
         }
         footer {
             position: fixed;
@@ -458,30 +500,6 @@
             background-color: #0056b3;
             color: white;
         }
-        #bin-visibility-container {
-            padding: 20px;
-            background-color: #f8f9fa;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            display: flex;
-            justify-content: center;
-            gap: 20px;
-            flex-wrap: wrap;
-        }
-        #current-bin, #next-bin, #video-display {
-            min-width: 150px;
-            text-align: center;
-        }
-        #current-bin h4, #next-bin h4, #video-display h4 {
-            margin: 10px 0;
-            font-size: 18px;
-            color: #007bff;
-        }
-        #current-bin p, #next-bin p, #video-display p {
-            margin: 5px 0;
-            font-size: 16px;
-            font-weight: bold;
-        }
     </style>
 </head>
 <body>
@@ -509,7 +527,7 @@
 
     <div id="home" class="page active">
         <div class="general-container">
-            <div class="group">
+            <div class="group general-read-values">
                 <h3>General - Read Values</h3>
                 <table>
                     <thead>
@@ -559,19 +577,9 @@
                 </table>
             </div>
 
-            <div class="group">
-                <h3>Bin Visibility</h3>
+            <div class="group bin-visibility-group">
+                <h3>Bin Video Visibility</h3>
                 <div id="bin-visibility-container">
-                    <div id="current-bin">
-                        <h4>Current Bin</h4>
-                        <img id="current-bin-image" class="indicator-image-large" src="/static/ASSLY_IMAGES/off.jpeg" alt="Current Bin">
-                        <p id="current-bin-name">None</p>
-                    </div>
-                    <div id="next-bin">
-                        <h4>Next Bin</h4>
-                        <img id="next-bin-image" class="indicator-image-large" src="/static/ASSLY_IMAGES/off.jpeg" alt="Next Bin">
-                        <p id="next-bin-name">None</p>
-                    </div>
                     <div id="video-display">
                         <h4>Video Display</h4>
                         <video id="video-display-video" class="indicator-video-large" autoplay loop muted playsinline src="/static/ASSLY_IMAGES/off.mp4"></video>
@@ -580,6 +588,23 @@
                 </div>
             </div>
         </div>
+
+        <div class="group bin-visibility-group">
+                <h3>Bin images Visibility</h3>
+                    <div class="bin-images-container">
+                        <div id="current-bin">
+                            <h4>Current Bin</h4>
+                            <img id="current-bin-image" class="indicator-image-large" src="/static/ASSLY_IMAGES/off.jpeg" alt="Current Bin">
+                            <p id="current-bin-name">None</p>
+                        </div>
+                        <div id="next-bin">
+                            <h4>Next Bin</h4>
+                            <img id="next-bin-image" class="indicator-image-large" src="/static/ASSLY_IMAGES/off.jpeg" alt="Next Bin">
+                            <p id="next-bin-name">None</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
         <div style="display:none">
             <!-- M200 to M248 -->
@@ -731,7 +756,7 @@
                             <tr>
                                 <td>8</td>
                                 <td>O_RING_28X2</td>
-                                <td><span id="D324">0</span> <input type="number" id="D324_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D324', 'D324_input')">Write</button></td>
+                                <td><span id="D324">0</span> <input type="number" id="D324_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D324', 'D324around_input')">Write</button></td>
                                 <td><span id="D424">0</span></td>
                                 <td><span id="D624">0</span> <input type="number" id="D624_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D624', 'D624_input')">Write</button></td>
                             </tr>
@@ -990,7 +1015,7 @@
             { tag: 'M221', name: 'PLUNGER_ARM_BT40_EMPTY' },
             { tag: 'M222', name: 'PARALLEL_KEY_4X4X12_EMPTY' },
             { tag: 'M223', name: 'SPRING_PLUNGER_BT40_ARM_EMPTY' },
-            { tag: 'M224', name: 'PLUNGERNUT_ARM_BT40_EMPTY' },
+            { tag: 'M224', name: 'PLUNGERNUT_ARM_BT_40_EMPTY' },
             { tag: 'M225', name: 'O_RING_23X1_5_EMPTY' },
             { tag: 'M226', name: 'O_RING_28X2_EMPTY' },
             { tag: 'M227', name: 'RING_FEEDER_HSG_BT40_EMPTY' },
@@ -1040,7 +1065,7 @@
         const videoMap = {
             '1': { video: '/static/ASSLY_IMAGES/1. Ring feeder assly.mp4', name: 'Ring Feeder Assembly' },
             '2': { video: '/static/ASSLY_IMAGES/2. plunger assly.mp4', name: 'Plunger Assembly' },
-            '3': { video: '/static/ASSLY_IMAGES/3.Arm assly.mp4', name: 'Arm Assembly' },
+            '3': { video: '/static/ASSLY_IMAGES/3. Arm assly.mp4', name: 'Arm Assembly' },
             'default': { video: '/static/ASSLY_IMAGES/off.mp4', name: 'None' }
         };
 
