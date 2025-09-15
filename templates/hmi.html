@@ -53,21 +53,18 @@
             object-fit: contain;
         }
         .indicator-image-large {
-            width: 100%;
-            max-width: 300px;
-            height: auto;
-            object-fit: contain;
-            border: 2px solid #333;
+            width: 500px; /* Increased width for larger images */
+            height: 300px; /* Set fixed height for consistency */
+            border: 2px solid #333; /* Adjusted frame width */
             border-radius: 8px;
             display: block;
             margin: 0 auto;
         }
         .indicator-video-large {
-            width: 100%;
-            max-width: 400px;
-            height: auto;
-            object-fit: contain;
-            border: 2px solid #333;
+            width: 620px; /* Increased width for larger videos */
+            height: 350px; /* Set fixed height for consistency */
+            object-fit: contain; /* Ensure video scales properly */
+            border: 2px solid #333; /* Adjusted frame width */
             border-radius: 8px;
             display: block;
             margin: 0 auto;
@@ -392,7 +389,7 @@
             min-width: 300px;
         }
         #bin-visibility-container {
-            padding: 20px;
+            padding: 0px;
             background-color: #f8f9fa;
             border-radius: 8px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
@@ -415,7 +412,7 @@
             text-align: center;
         }
         #current-bin h4, #next-bin h4, #video-display h4 {
-            margin: 10px 0;
+            margin: 0px 0;
             font-size: 18px;
             color: #007bff;
         }
@@ -581,30 +578,29 @@
                 <h3>Bin Video Visibility</h3>
                 <div id="bin-visibility-container">
                     <div id="video-display">
-                        <h4>Video Display</h4>
                         <video id="video-display-video" class="indicator-video-large" autoplay loop muted playsinline src="/static/ASSLY_IMAGES/off.mp4"></video>
                         <p id="video-display-name">None</p>
                     </div>
                 </div>
             </div>
         </div>
+
         <div class="group bin-visibility-group">
-            <h3>Bin Images Visibility</h3>
-            <div id="bin-visibility-container">
-                <div class="bin-images-container">
-                    <div id="current-bin">
-                        <h4>Current Bin</h4>
-                        <img id="current-bin-image" class="indicator-image-large" src="/static/ASSLY_IMAGES/off.jpeg" alt="Current Bin">
-                        <p id="current-bin-name">None</p>
-                    </div>
-                    <div id="next-bin">
-                        <h4>Next Bin</h4>
-                        <img id="next-bin-image" class="indicator-image-large" src="/static/ASSLY_IMAGES/off.jpeg" alt="Next Bin">
-                        <p id="next-bin-name">None</p>
+                <h3>Bin images Visibility</h3>
+                    <div class="bin-images-container">
+                        <div id="current-bin">
+                            <h4>Current Bin</h4>
+                            <img id="current-bin-image" class="indicator-image-large" src="/static/ASSLY_IMAGES/off.jpeg" alt="Current Bin">
+                            <p id="current-bin-name">None</p>
+                        </div>
+                        <div id="next-bin">
+                            <h4>Next Bin</h4>
+                            <img id="next-bin-image" class="indicator-image-large" src="/static/ASSLY_IMAGES/off.jpeg" alt="Next Bin">
+                            <p id="next-bin-name">None</p>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
 
         <div style="display:none">
             <!-- M200 to M248 -->
@@ -756,7 +752,7 @@
                             <tr>
                                 <td>8</td>
                                 <td>O_RING_28X2</td>
-                                <td><span id="D324">0</span> <input type="number" id="D324_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D324', 'D324around_input')">Write</button></td>
+                                <td><span id="D324">0</span> <input type="number" id="D324_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D324', 'D324_input')">Write</button></td>
                                 <td><span id="D424">0</span></td>
                                 <td><span id="D624">0</span> <input type="number" id="D624_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D624', 'D624_input')">Write</button></td>
                             </tr>
