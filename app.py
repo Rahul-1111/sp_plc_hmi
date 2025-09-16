@@ -5,7 +5,7 @@ from flask import Flask, render_template
 from flask_socketio import SocketIO, emit
 from plc_connector import PLCConnector
 
-# Logging setup (optional: hide noisy access logs)
+# Logging setup (hide noisy access logs)
 logging.getLogger('werkzeug').setLevel(logging.ERROR)
 
 # Flask & SocketIO setup
@@ -21,7 +21,7 @@ socketio = SocketIO(
 # PLC configuration
 PLC_IP = '192.168.3.39'
 PLC_PORT = 5002
-plc = PLCConnector(PLC_IP, PLC_PORT)
+plc = PLCConnector(PLC_IP, PLC_PORT, retry_interval=5)  # Increased retry interval for stability
 
 # Tags for bits and words (from SP.xlsx)
 BIT_TAGS = [
@@ -94,6 +94,7 @@ def poll_plc():
 
         except Exception as e:
             print(f"[PLC Poll Error] {e}")
+            plc.reconnect()  # Attempt to reconnect on polling error
 
         time.sleep(0.1)  # Poll interval (100 ms)
 
@@ -105,22 +106,37 @@ def handle_connect():
     socketio.emit('plc_data', {'bits': last_bits, 'words': last_words})
 
 @socketio.on('toggle_bit')
-def handle_toggle_bit(tag):
+def handle_toggle_bit(data):
     """
     Flip a PLC bit (ON/OFF).
+    Expected payload: {'tag': 'L101'} or string 'L101'
     """
     try:
+        # Extract tag from data (handle both dict and string)
+        if isinstance(data, dict) and 'tag' in data:
+            tag = data['tag']
+        else:
+            tag = data
         print(f"[DEBUG] Toggle request for {tag}")
+        
+        # Validate tag
+        if tag not in BIT_TAGS:
+            emit('toggle_response', {'status': 'error', 'tag': tag, 'message': f'Invalid tag: {tag}'})
+            return
+
         current = plc.read_bit(tag)
         plc.write_bit(tag, not current)
+        emit('toggle_response', {'status': 'success', 'tag': tag, 'value': not current})
     except Exception as e:
         print(f"[Toggle Bit Error] {tag}: {e}")
+        emit('toggle_response', {'status': 'error', 'tag': tag, 'message': str(e)})
+        plc.reconnect()  # Attempt to reconnect on error
 
 @socketio.on('write_word')
 def handle_write_word(data):
     """
     Write an integer (16-bit word) to the PLC.
-    Expected payload: {"tag": "D396", "value": 123}
+    Expected payload: {'tag': 'D396', 'value': 123}
     """
     tag = data.get('tag')
     value = data.get('value')
@@ -130,12 +146,19 @@ def handle_write_word(data):
         return
 
     try:
+        # Validate tag
+        if tag not in WORD_TAGS:
+            emit('write_response', {'status': 'error', 'tag': tag, 'message': f'Invalid tag: {tag}'})
+            return
+
         # Ensure only integer is written
         int_value = int(value)
         plc.write_word(tag, int_value)
         emit('write_response', {'status': 'success', 'tag': tag, 'value': int_value})
     except Exception as e:
+        print(f"[Write Word Error] {tag}: {e}")
         emit('write_response', {'status': 'error', 'tag': tag, 'message': str(e)})
+        plc.reconnect()  # Attempt to reconnect on error
 
 # Routes
 @app.route('/')
