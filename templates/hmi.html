@@ -500,7 +500,7 @@
     </style>
 </head>
 <body>
-    <h1>SP PLC HMI</h1>
+    <h1>PRAGATI</h1>
 
     <div class="nav-bar">
         <button class="nav-button" onclick="showPage('home')">HOME</button>
@@ -663,8 +663,8 @@
                 <thead>
                     <tr>
                         <th>VFD_WRITE</th>
-                        <th>SERVO_MAN_TRQ_FRM</th>
-                        <th>SERVO_AUTO_TRQ_FRM</th>
+                        <th>SERVO_TRQ</th>
+                        <th>SERVO_SPEED</th>
                         <th>PLUNGER_HOLD_TIME</th>
                         <th>SERVO_FWD_TIME</th>
                     </tr>
@@ -672,11 +672,11 @@
                 <tbody>
                     <tr>
                         <td><span id="D500">0</span>
-                        <input type="number" id="D500_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D500', 'D500_input')">Write</button></td>
-                        <td><span id="D520">0</span>
-                        <input type="number" id="D520_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D520', 'D520_input')">Write</button></td>
-                        <td><span id="D530">0</span>
-                        <input type="number" id="D530_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D530', 'D530_input')">Write</button></td>
+                        <input type="number" id="D500_input" min="0" max="50" step="1"><button class="write-button" onclick="writeWord('D500', 'D500_input')">Write</button></td>
+                        <td><span id="D802">0</span>
+                        <input type="number" id="D802_input" min="0" max="8" step="1"><button class="write-button" onclick="writeWord('D802', 'D802_input')">Write</button></td>
+                        <td><span id="D812">0</span>
+                        <input type="number" id="D812_input" min="0" max="10" step="1"><button class="write-button" onclick="writeWord('D812', 'D812_input')">Write</button></td>
                         <td><span id="D304">0</span>
                         <input type="number" id="D304_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D304', 'D304_input')">Write</button></td>
                         <td><span id="D306">0</span>
@@ -977,10 +977,6 @@
                 <span>ARM SELECT</span>
                 <label class="toggle-switch"><input type="checkbox" id="footer-toggle-L102"><span class="slider"></span></label>
             </div>
-            <div class="footer-action">
-                <span>DATA LOAD</span>
-                <label class="toggle-switch"><input type="checkbox" id="footer-toggle-M7"><span class="slider"></span></label>
-            </div>
         </div>
     </footer>
 
@@ -1193,7 +1189,11 @@
             const input = document.getElementById(inputId);
             if (input) {
                 const value = parseInt(input.value, 10);
-                if (!isNaN(value) && value >= 0 && value <= 99999) {
+                const min = parseInt(input.min, 10) || 0;
+                const max = parseInt(input.max, 10) || 99999;
+                const isValid = !isNaN(value) && value >= min && value <= max;
+                if (isValid) {
+                    input.classList.remove('error');  // Clear error immediately if valid
                     socket.emit('write_word', { tag, value });
                     console.log(`Writing word ${tag}: ${value}`);
                 } else {
@@ -1226,9 +1226,35 @@
                 toggleBit(tag);
             });
         });
-
         // Initialize page
         showPage('home');
+
+        // Client-side validation for number inputs
+        document.querySelectorAll('input[type="number"]').forEach(input => {
+            const validateInput = () => {
+                const value = parseInt(input.value, 10);
+                const min = parseInt(input.min, 10) || 0;
+                const max = parseInt(input.max, 10) || 99999;
+                const isValid = !isNaN(value) && value >= min && value <= max;
+
+                if (isValid) {
+                    input.classList.remove('error');
+                    input.title = '';  // Clear tooltip
+                } else {
+                    input.classList.add('error');
+                    if (!input.hasAttribute('title')) {
+                        input.title = `Value must be between ${min} and ${max}`;
+                    }
+                }
+            };
+
+            // Validate on input change and blur (focus out)
+            input.addEventListener('input', validateInput);
+            input.addEventListener('blur', validateInput);
+
+            // Initial validation
+            validateInput();
+        });
     </script>
 </body>
 </html>

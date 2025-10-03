@@ -25,7 +25,7 @@ plc = PLCConnector(PLC_IP, PLC_PORT, retry_interval=5)  # Increased retry interv
 
 # Tags for bits and words (from SP.xlsx)
 BIT_TAGS = [
-    'M7', 'M9', 'M100', 'M101', 'M102', 'M103', 'M200', 'M201', 'M202', 'M203',
+    'M9', 'M100', 'M101', 'M102', 'M103', 'M200', 'M201', 'M202', 'M203',
     'M204', 'M205', 'M206', 'M207', 'M208', 'M209', 'M210', 'M211', 'M212', 'M213',
     'M214', 'M215', 'M216', 'M217', 'M218', 'M219', 'M220', 'M221', 'M222', 'M223',
     'M224', 'M225', 'M226', 'M227', 'M228', 'M229', 'M230', 'M231', 'M232', 'M233',
@@ -44,10 +44,11 @@ WORD_TAGS = [
     'D364', 'D366', 'D368', 'D410', 'D412', 'D414', 'D416', 'D418', 'D420', 'D422',
     'D424', 'D426', 'D428', 'D430', 'D432', 'D434', 'D436', 'D438', 'D440', 'D442',
     'D444', 'D446', 'D448', 'D450', 'D452', 'D454', 'D456', 'D458', 'D460', 'D462',
-    'D464', 'D466', 'D468', 'D500', 'D512', 'D520', 'D530', 'D550', 'D552', 'D554',
+    'D464', 'D466', 'D468', 'D500', 'D512', 'D550', 'D552', 'D554',
     'D610', 'D612', 'D614', 'D616', 'D618', 'D620', 'D622', 'D624', 'D626', 'D628',
     'D630', 'D632', 'D634', 'D636', 'D638', 'D640', 'D642', 'D644', 'D646', 'D648',
-    'D650', 'D652', 'D654', 'D656', 'D658', 'D660', 'D662', 'D664', 'D666', 'D668'
+    'D650', 'D652', 'D654', 'D656', 'D658', 'D660', 'D662', 'D664', 'D666', 'D668',
+    'D802', 'D812'
 ]
 
 # Runtime state
@@ -62,27 +63,48 @@ def poll_plc():
     """
     global last_bits, last_words
 
-    # Define ranges based on BIT_TAGS (M7 to M807) and WORD_TAGS (D302 to D668)
-    bit_start = "M7"
-    bit_size = 807 - 7 + 1  # From M7 to M807
-    word_start = "D302"
-    word_size = 668 - 302 + 1  # From D302 to D668
+    # Separate M and L for bits
+    m_tags = [tag for tag in BIT_TAGS if tag.startswith('M')]
+    l_tags = [tag for tag in BIT_TAGS if tag.startswith('L')]
+    m_start = "M9"  # Min M tag
+    m_size = 807 - 9 + 1  # 799 bits (M9 to M807)
+    l_start = "L100"
+    l_size = 102 - 100 + 1  # 3 bits
 
-    # Map tag names to their indices in the batch
-    bit_indices = {tag: int(tag[1:]) - 7 for tag in BIT_TAGS}  # e.g., M7 -> 0, M9 -> 2
-    word_indices = {tag: int(tag[1:]) - 302 for tag in WORD_TAGS}  # e.g., D302 -> 0, D304 -> 2
+    # Words: dynamic size
+    word_start = "D302"
+    max_d = max(int(tag[1:]) for tag in WORD_TAGS)  # 812
+    word_size = max_d - 302 + 1  # 511 words
+
+    # Indices
+    m_indices = {tag: int(tag[1:]) - 9 for tag in m_tags}
+    l_indices = {tag: int(tag[1:]) - 100 for tag in l_tags}
+    word_indices = {tag: int(tag[1:]) - 302 for tag in WORD_TAGS}
 
     # Force initial emission
     initial = True
 
     while True:
         try:
-            # Read entire ranges in one call
-            bit_values = plc.batch_read_bits(bit_start, bit_size)
-            word_values = plc.batch_read_words(word_start, word_size)
+            # Read M bits batch
+            m_values = plc.batch_read_bits(m_start, m_size)
+            if not m_values or len(m_values) != m_size:
+                raise ValueError("Incomplete M bits read")
+            m_bits = {tag: m_values[m_indices[tag]] for tag in m_tags}
 
-            # Extract only the needed tags
-            bits = {tag: bit_values[bit_indices[tag]] for tag in BIT_TAGS}
+            # Read L bits batch (separate)
+            l_values = plc.batch_read_bits(l_start, l_size)
+            if not l_values or len(l_values) != l_size:
+                raise ValueError("Incomplete L bits read")
+            l_bits = {tag: l_values[l_indices[tag]] for tag in l_tags}
+
+            # Combine bits
+            bits = {**m_bits, **l_bits}
+
+            # Read words batch
+            word_values = plc.batch_read_words(word_start, word_size)
+            if not word_values or len(word_values) != word_size:
+                raise ValueError("Incomplete words read")
             words = {tag: word_values[word_indices[tag]] for tag in WORD_TAGS}
 
             # Emit on first poll or if data changes
@@ -93,10 +115,10 @@ def poll_plc():
                 initial = False
 
         except Exception as e:
-            print(f"[PLC Poll Error] {e}")
+            logging.error(f"[PLC Poll Error] {e}")  # Use logging
             plc.reconnect()  # Attempt to reconnect on polling error
 
-        time.sleep(0.1)  # Poll interval (100 ms)
+        time.sleep(0.2)  # Slower poll for stability (adjust as needed)
 
 # Socket.IO events
 @socketio.on('connect')
