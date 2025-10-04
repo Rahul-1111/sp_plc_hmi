@@ -1,7 +1,6 @@
 import logging
 import threading
 import time
-import struct
 from flask import Flask, render_template
 from flask_socketio import SocketIO, emit
 from plc_connector import PLCConnector
@@ -22,11 +21,11 @@ socketio = SocketIO(
 # PLC configuration
 PLC_IP = '192.168.3.39'
 PLC_PORT = 5002
-plc = PLCConnector(PLC_IP, PLC_PORT, retry_interval=5)
+plc = PLCConnector(PLC_IP, PLC_PORT, retry_interval=5)  # Increased retry interval for stability
 
-# Tags for bits and words
+# Tags for bits and words (from SP.xlsx)
 BIT_TAGS = [
-    'M3', 'M7', 'M13', 'M14', 'M15', 'M16', 'M17', 'M20', 'M21', 'M22', 'M33',
+    'M3', 'M7', 'M13', 'M14', 'M15', 'M16', 'M17', 'M20', 'M21', 'M22', 'M23',
     'M9', 'M100', 'M101', 'M102', 'M103', 'M200', 'M201', 'M202', 'M203',
     'M204', 'M205', 'M206', 'M207', 'M208', 'M209', 'M210', 'M211', 'M212', 'M213',
     'M214', 'M215', 'M216', 'M217', 'M218', 'M219', 'M220', 'M221', 'M222', 'M223',
@@ -48,164 +47,150 @@ WORD_TAGS = [
     'D464', 'D466', 'D468', 'D500', 'D512', 'D520', 'D530', 'D550', 'D552', 'D554',
     'D610', 'D612', 'D614', 'D616', 'D618', 'D620', 'D622', 'D624', 'D626', 'D628',
     'D630', 'D632', 'D634', 'D636', 'D638', 'D640', 'D642', 'D644', 'D646', 'D648',
-    'D650', 'D652', 'D654', 'D656', 'D658', 'D660', 'D662', 'D664', 'D666', 'D668',
-    'D802', 'D803', 'D812', 'D813'  # float registers (low+high words)
+    'D650', 'D652', 'D654', 'D656', 'D658', 'D660', 'D662', 'D664', 'D666', 'D668', 'D802', 'D812'
 ]
 
 # Runtime state
 last_bits = {}
 last_words = {}
-last_floats = {}
-
-# --- Float Helpers ---
-def plc_write_float(tag: str, value: float):
-    base = int(tag[1:])
-    packed = struct.pack('<f', float(value))  # little-endian float
-    words = struct.unpack('<HH', packed)
-    plc.write_word(f"D{base}", words[0])
-    plc.write_word(f"D{base+1}", words[1])
-
-def plc_read_float(tag: str) -> float:
-    base = int(tag[1:])
-    low = plc.read_word(f"D{base}")
-    high = plc.read_word(f"D{base+1}")
-    packed = struct.pack('<HH', low, high)
-    return struct.unpack('<f', packed)[0]
 
 # PLC polling
 def poll_plc():
     """
-    Continuously read bits & words from the PLC
+    Continuously read bits & integer words from the PLC
     and send updates to connected clients.
     """
-    global last_bits, last_words, last_floats
+    global last_bits, last_words
 
-    # Define ranges
+    # Define ranges based on BIT_TAGS (M7 to M807) and WORD_TAGS (D302 to D668)
     bit_start = "M7"
     bit_size = 569 - 7 + 1  # From M7 to M807
     word_start = "D302"
-    word_size = 813 - 302 + 1  # D302 → D813
+    word_size = 812 - 302 + 1  # From D302 to D668
 
-    # Map tag names
-    bit_indices = {tag: int(tag[1:]) - 7 for tag in BIT_TAGS}
-    word_indices = {tag: int(tag[1:]) - 302 for tag in WORD_TAGS}
+    # Map tag names to their indices in the batch
+    bit_indices = {tag: int(tag[1:]) - 7 for tag in BIT_TAGS}  # e.g., M7 -> 0, M9 -> 2
+    word_indices = {tag: int(tag[1:]) - 302 for tag in WORD_TAGS}  # e.g., D302 -> 0, D304 -> 2
 
+    # Force initial emission
     initial = True
 
     while True:
         try:
+            # Read entire ranges in one call
             bit_values = plc.batch_read_bits(bit_start, bit_size)
             word_values = plc.batch_read_words(word_start, word_size)
 
+            # Extract only the needed tags
             bits = {tag: bit_values[bit_indices[tag]] for tag in BIT_TAGS}
             words = {tag: word_values[word_indices[tag]] for tag in WORD_TAGS}
 
-            # floats
-            floats = {
-                "D802": plc_read_float("D802"),
-                "D812": plc_read_float("D812")
-            }
-
-            if initial or bits != last_bits or words != last_words or floats != last_floats:
-                socketio.emit('plc_data', {'bits': bits, 'words': words, 'floats': floats})
+            # Emit on first poll or if data changes
+            if initial or bits != last_bits or words != last_words:
+                socketio.emit('plc_data', {'bits': bits, 'words': words})
                 last_bits = bits.copy()
                 last_words = words.copy()
-                last_floats = floats.copy()
                 initial = False
 
         except Exception as e:
             print(f"[PLC Poll Error] {e}")
-            plc.reconnect()
+            plc.reconnect()  # Attempt to reconnect on polling error
 
-        time.sleep(0.1)
+        time.sleep(0.1)  # Poll interval (100 ms)
 
 # Socket.IO events
 @socketio.on('connect')
 def handle_connect():
     print("[Client] Connected")
-    socketio.emit('plc_data', {'bits': last_bits, 'words': last_words, 'floats': last_floats})
+    # Send current PLC state to newly connected client
+    socketio.emit('plc_data', {'bits': last_bits, 'words': last_words})
 
 @socketio.on('toggle_bit')
 def handle_toggle_bit(data):
+    """
+    Flip a PLC bit (ON/OFF).
+    Expected payload: {'tag': 'L101'} or string 'L101'
+    """
     try:
+        # Extract tag from data (handle both dict and string)
         if isinstance(data, dict) and 'tag' in data:
             tag = data['tag']
         else:
             tag = data
         print(f"[DEBUG] Toggle request for {tag}")
+        
+        # Validate tag
         if tag not in BIT_TAGS:
             emit('toggle_response', {'status': 'error', 'tag': tag, 'message': f'Invalid tag: {tag}'})
             return
+
         current = plc.read_bit(tag)
         plc.write_bit(tag, not current)
         emit('toggle_response', {'status': 'success', 'tag': tag, 'value': not current})
     except Exception as e:
         print(f"[Toggle Bit Error] {tag}: {e}")
         emit('toggle_response', {'status': 'error', 'tag': tag, 'message': str(e)})
-        plc.reconnect()
+        plc.reconnect()  # Attempt to reconnect on error
 
 @socketio.on('write_word')
 def handle_write_word(data):
+    """
+    Write an integer (16-bit word) to the PLC.
+    Expected payload: {'tag': 'D396', 'value': 123}
+    """
     tag = data.get('tag')
     value = data.get('value')
+
     if tag is None or value is None:
         emit('write_response', {'status': 'error', 'message': 'Missing tag or value'})
         return
+
     try:
+        # Validate tag
         if tag not in WORD_TAGS:
             emit('write_response', {'status': 'error', 'tag': tag, 'message': f'Invalid tag: {tag}'})
             return
+
+        # Ensure only integer is written
         int_value = int(value)
         plc.write_word(tag, int_value)
         emit('write_response', {'status': 'success', 'tag': tag, 'value': int_value})
     except Exception as e:
         print(f"[Write Word Error] {tag}: {e}")
         emit('write_response', {'status': 'error', 'tag': tag, 'message': str(e)})
-        plc.reconnect()
-
-@socketio.on('write_float')
-def handle_write_float(data):
-    """
-    Write float into double word register
-    """
-    tag = data.get('tag')
-    value = data.get('value')
-    if tag is None or value is None:
-        emit('write_float_response', {'status': 'error', 'message': 'Missing tag or value'})
-        return
-    try:
-        if tag not in ["D802", "D812"]:
-            emit('write_float_response', {'status': 'error', 'tag': tag, 'message': f'Invalid float tag: {tag}'})
-            return
-        float_val = float(value)
-        plc_write_float(tag, float_val)
-        emit('write_float_response', {'status': 'success', 'tag': tag, 'value': float_val})
-    except Exception as e:
-        print(f"[Write Float Error] {tag}: {e}")
-        emit('write_float_response', {'status': 'error', 'tag': tag, 'message': str(e)})
-        plc.reconnect()
+        plc.reconnect()  # Attempt to reconnect on error
 
 @socketio.on('set_bit')
 def handle_set_bit(data):
+    """
+    Set a PLC bit to a specific value (true/false).
+    Expected payload: {'tag': 'M13', 'value': true} or {'tag': 'M13', 'value': false}
+    """
     try:
+        # Extract tag and value from data (handle both dict and string for tag)
         if isinstance(data, dict):
             tag = data.get('tag')
-            value = data.get('value', True)
+            value = data.get('value', True)  # Default to True if missing
         else:
             tag = data
-            value = True
+            value = True  # For legacy string-only emits
+
         if not isinstance(value, bool):
-            value = bool(value)
+            value = bool(value)  # Ensure it's a boolean
+
         print(f"[DEBUG] Set request for {tag} to {value}")
+        
+        # Validate tag
         if tag not in BIT_TAGS:
             emit('set_bit_response', {'status': 'error', 'tag': tag, 'message': f'Invalid tag: {tag}'})
             return
+
         plc.write_bit(tag, value)
         emit('set_bit_response', {'status': 'success', 'tag': tag, 'value': value})
     except Exception as e:
         print(f"[Set Bit Error] {tag}: {e}")
         emit('set_bit_response', {'status': 'error', 'tag': tag, 'message': str(e)})
-        plc.reconnect()
+        plc.reconnect()  # Attempt to reconnect on error
 
 # Routes
 @app.route('/')
@@ -214,5 +199,8 @@ def index():
 
 # Entry point
 if __name__ == '__main__':
+    # Start the background polling thread
     threading.Thread(target=poll_plc, daemon=True).start()
+
+    # Launch the server
     socketio.run(app, host='0.0.0.0', port=5000)
