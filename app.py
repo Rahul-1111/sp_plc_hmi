@@ -25,6 +25,7 @@ plc = PLCConnector(PLC_IP, PLC_PORT, retry_interval=5)  # Increased retry interv
 
 # Tags for bits and words (from SP.xlsx)
 BIT_TAGS = [
+    'M3', 'M13', 'M14', 'M15', 'M16', 'M17', 'M20', 'M21', 'M22', 'M23', 'M448', 'M449',
     'M9', 'M100', 'M101', 'M102', 'M103', 'M200', 'M201', 'M202', 'M203',
     'M204', 'M205', 'M206', 'M207', 'M208', 'M209', 'M210', 'M211', 'M212', 'M213',
     'M214', 'M215', 'M216', 'M217', 'M218', 'M219', 'M220', 'M221', 'M222', 'M223',
@@ -66,19 +67,32 @@ def poll_plc():
     # Separate M and L for bits
     m_tags = [tag for tag in BIT_TAGS if tag.startswith('M')]
     l_tags = [tag for tag in BIT_TAGS if tag.startswith('L')]
-    m_start = "M9"  # Min M tag
-    m_size = 807 - 9 + 1  # 799 bits (M9 to M807)
-    l_start = "L100"
-    l_size = 102 - 100 + 1  # 3 bits
+    if m_tags:
+        min_m = min(int(tag[1:]) for tag in m_tags)
+        max_m = max(int(tag[1:]) for tag in m_tags)
+        m_start = f"M{min_m}"
+        m_size = max_m - min_m + 1
+        m_indices = {tag: int(tag[1:]) - min_m for tag in m_tags}
+    else:
+        m_start = "M0"
+        m_size = 0
+        m_indices = {}
+    if l_tags:
+        min_l = min(int(tag[1:]) for tag in l_tags)
+        max_l = max(int(tag[1:]) for tag in l_tags)
+        l_start = f"L{min_l}"
+        l_size = max_l - min_l + 1
+        l_indices = {tag: int(tag[1:]) - min_l for tag in l_tags}
+    else:
+        l_start = "L0"
+        l_size = 0
+        l_indices = {}
 
     # Words: dynamic size
     word_start = "D302"
     max_d = max(int(tag[1:]) for tag in WORD_TAGS)  # 812
     word_size = max_d - 302 + 1  # 511 words
 
-    # Indices
-    m_indices = {tag: int(tag[1:]) - 9 for tag in m_tags}
-    l_indices = {tag: int(tag[1:]) - 100 for tag in l_tags}
     word_indices = {tag: int(tag[1:]) - 302 for tag in WORD_TAGS}
 
     # Force initial emission
@@ -87,16 +101,22 @@ def poll_plc():
     while True:
         try:
             # Read M bits batch
-            m_values = plc.batch_read_bits(m_start, m_size)
-            if not m_values or len(m_values) != m_size:
-                raise ValueError("Incomplete M bits read")
-            m_bits = {tag: m_values[m_indices[tag]] for tag in m_tags}
+            if m_size > 0:
+                m_values = plc.batch_read_bits(m_start, m_size)
+                if not m_values or len(m_values) != m_size:
+                    raise ValueError("Incomplete M bits read")
+                m_bits = {tag: m_values[m_indices[tag]] for tag in m_tags}
+            else:
+                m_bits = {}
 
             # Read L bits batch (separate)
-            l_values = plc.batch_read_bits(l_start, l_size)
-            if not l_values or len(l_values) != l_size:
-                raise ValueError("Incomplete L bits read")
-            l_bits = {tag: l_values[l_indices[tag]] for tag in l_tags}
+            if l_size > 0:
+                l_values = plc.batch_read_bits(l_start, l_size)
+                if not l_values or len(l_values) != l_size:
+                    raise ValueError("Incomplete L bits read")
+                l_bits = {tag: l_values[l_indices[tag]] for tag in l_tags}
+            else:
+                l_bits = {}
 
             # Combine bits
             bits = {**m_bits, **l_bits}

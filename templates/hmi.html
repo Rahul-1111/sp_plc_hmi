@@ -7,12 +7,16 @@
     <link href="{{ url_for('static', filename='css/roboto.css') }}" rel="stylesheet">
     <script src="{{ url_for('static', filename='js/socket.io.min.js') }}"></script>
     <style>
+        html {
+            height: 100%;
+        }
         body {
             font-family: 'Roboto', Arial, sans-serif;
             background-color: #f0f2f5;
             margin: 0;
             padding: 20px;
             padding-bottom: 80px;
+            min-height: 100%;
         }
         h1, h2 {
             color: #333;
@@ -32,7 +36,7 @@
             border-bottom: 2px solid #e0e0e0;
             padding-bottom: 8px;
             margin-bottom: 10px;
-            margin-top: -10px;
+            margin-top: 0px;
             font-size: 20px;
             color: #444;
         }
@@ -129,6 +133,25 @@
         button:hover {
             background-color: #0056b3;
         }
+        .control-button {
+            margin: 2px;
+            padding: 8px 16px;
+            font-size: 16px;
+            cursor: pointer;
+            border: none;
+            border-radius: 4px;
+            background-color: #007bff;
+            color: white;
+            transition: background-color 0.2s;
+            vertical-align: middle;
+        }
+        .control-button:hover {
+            background-color: #0056b3;
+        }
+        .control-button:active {
+            background-color: #0056b3;
+            transform: scale(0.98);
+        }
         .write-button {
             padding: 6px 12px;
             font-size: 14px;
@@ -192,6 +215,8 @@
         }
         .page {
             display: none;
+            max-height: calc(100vh - 200px);
+            overflow-y: auto;
         }
         .active {
             display: block;
@@ -541,34 +566,107 @@
                             <td><span class="indicator off" id="indicator-M9"></span></td>
                         </tr>
                         <tr>
-                            <td>5</td>
+                            <td>2</td>
                             <td>PLUNGER_ASSLY_AUTO_READY</td>
                             <td><span class="indicator off" id="indicator-M300"></span></td>
                         </tr>
                         <tr>
-                            <td>6</td>
+                            <td>3</td>
                             <td>RING_FEEDER_ASSLY_AUTO_READY</td>
                             <td><span class="indicator off" id="indicator-M400"></span></td>
                         </tr>
                         <tr>
-                            <td>7</td>
+                            <td>4</td>
                             <td>ARM_ASSLY_AUTO_READY</td>
                             <td><span class="indicator off" id="indicator-M500"></span></td>
                         </tr>
                         <tr>
-                            <td>8</td>
+                            <td>5</td>
                             <td>PLUNGER_ASSLY_AUTO_ON</td>
                             <td><span class="indicator off" id="indicator-M301"></span></td>
                         </tr>
                         <tr>
-                            <td>9</td>
+                            <td>6</td>
                             <td>RING_FEEDER_ASSLY_AUTO_ON</td>
                             <td><span class="indicator off" id="indicator-M401"></span></td>
                         </tr>
                         <tr>
-                            <td>10</td>
+                            <td>7</td>
                             <td>ARM_ASSLY_AUTO_ON</td>
                             <td><span class="indicator off" id="indicator-M501"></span></td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>Controls</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>SR NO</th>
+                            <th>Name</th>
+                            <th>Control</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>1</td>
+                            <td>INDEXER MOTOR HOME</td>
+                            <td><button class="control-button" onmousedown="setBit('M3', true)" onmouseup="setBit('M3', false)" ontouchstart="setBit('M3', true)" ontouchend="setBit('M3', false)">HOME</button></td>
+                        </tr>
+                        <tr>
+                            <td>2</td>
+                            <td>INDEXER MOTOR FWD</td>
+                            <td><label class="toggle-switch"><input type="checkbox" id="toggle-M13"><span class="slider"></span></label></td>
+                        </tr>
+                        <tr>
+                            <td>3</td>
+                            <td>INDEXER MOTOR REV</td>
+                            <td><label class="toggle-switch"><input type="checkbox" id="toggle-M14"><span class="slider"></span></label></td>
+                        </tr>
+                        <tr>
+                            <td>4</td>
+                            <td>ARM MOTOR FWD</td>
+                            <td><label class="toggle-switch"><input type="checkbox" id="toggle-M15"><span class="slider"></span></label></td>
+                        </tr>
+                        <tr>
+                            <td>5</td>
+                            <td>ARM MOTOR REV</td>
+                            <td><label class="toggle-switch"><input type="checkbox" id="toggle-M16"><span class="slider"></span></label></td>
+                        </tr>
+                        <tr>
+                            <td>6</td>
+                            <td>PLUNGER ASSELY PRESS - 1</td>
+                            <td><label class="toggle-switch"><input type="checkbox" id="toggle-M17"><span class="slider"></span></label></td>
+                        </tr>
+                        <tr>
+                            <td>7</td>
+                            <td>PLUNGER ASSELY PRESS - 2 UP</td>
+                            <td><label class="toggle-switch"><input type="checkbox" id="toggle-M20"><span class="slider"></span></label></td>
+                        </tr>
+                        <tr>
+                            <td>8</td>
+                            <td>PLUNGER ASSELY PRESS - 2 DOWN</td>
+                            <td><label class="toggle-switch"><input type="checkbox" id="toggle-M21"><span class="slider"></span></label></td>
+                        </tr>
+                        <tr>
+                            <td>9</td>
+                            <td>FLAP OPEN</td>
+                            <td><label class="toggle-switch"><input type="checkbox" id="toggle-M22"><span class="slider"></span></label></td>
+                        </tr>
+                        <tr>
+                            <td>10</td>
+                            <td>FLAP CLOSE</td>
+                            <td><label class="toggle-switch"><input type="checkbox" id="toggle-M23"><span class="slider"></span></label></td>
+                        </tr>
+                        <tr>
+                            <td>11</td>
+                            <td>SERVO FWD</td>
+                            <td><label class="toggle-switch"><input type="checkbox" id="toggle-M448"><span class="slider"></span></label></td>
+                        </tr>
+                        <tr>
+                            <td>12</td>
+                            <td>SERVO REV</td>
+                            <td><label class="toggle-switch"><input type="checkbox" id="toggle-M449"><span class="slider"></span></label></td>
                         </tr>
                     </tbody>
                 </table>
@@ -582,10 +680,6 @@
                         <p id="video-display-name">None</p>
                     </div>
                 </div>
-            </div>
-        </div>
-
-        <div class="group bin-visibility-group">
                 <h3>Bin images Visibility</h3>
                     <div class="bin-images-container">
                         <div id="current-bin">
@@ -601,8 +695,22 @@
                     </div>
                 </div>
             </div>
+        </div>
 
         <div style="display:none">
+            <!-- Additional indicators for new bits -->
+            <span id="state-M3"></span><img class="indicator-image" id="indicator-M3" src="/static/ASSLY_IMAGES/off.png" alt="Indicator">
+            <span id="state-M13"></span><img class="indicator-image" id="indicator-M13" src="/static/ASSLY_IMAGES/off.png" alt="Indicator">
+            <span id="state-M14"></span><img class="indicator-image" id="indicator-M14" src="/static/ASSLY_IMAGES/off.png" alt="Indicator">
+            <span id="state-M15"></span><img class="indicator-image" id="indicator-M15" src="/static/ASSLY_IMAGES/off.png" alt="Indicator">
+            <span id="state-M16"></span><img class="indicator-image" id="indicator-M16" src="/static/ASSLY_IMAGES/off.png" alt="Indicator">
+            <span id="state-M17"></span><img class="indicator-image" id="indicator-M17" src="/static/ASSLY_IMAGES/off.png" alt="Indicator">
+            <span id="state-M20"></span><img class="indicator-image" id="indicator-M20" src="/static/ASSLY_IMAGES/off.png" alt="Indicator">
+            <span id="state-M21"></span><img class="indicator-image" id="indicator-M21" src="/static/ASSLY_IMAGES/off.png" alt="Indicator">
+            <span id="state-M22"></span><img class="indicator-image" id="indicator-M22" src="/static/ASSLY_IMAGES/off.png" alt="Indicator">
+            <span id="state-M23"></span><img class="indicator-image" id="indicator-M23" src="/static/ASSLY_IMAGES/off.png" alt="Indicator">
+            <span id="state-M448"></span><img class="indicator-image" id="indicator-M448" src="/static/ASSLY_IMAGES/off.png" alt="Indicator">
+            <span id="state-M449"></span><img class="indicator-image" id="indicator-M449" src="/static/ASSLY_IMAGES/off.png" alt="Indicator">
             <!-- M200 to M248 -->
             <span id="state-M200"></span><img class="indicator-image" id="indicator-M200" src="/static/ASSLY_IMAGES/off.png" alt="Indicator">
             <span id="state-M201"></span><img class="indicator-image" id="indicator-M201" src="/static/ASSLY_IMAGES/off.png" alt="Indicator">
@@ -1116,6 +1224,7 @@
             for (let tag in data.bits) {
                 const indicatorElement = document.getElementById(`indicator-${tag}`);
                 const footerToggleElement = document.getElementById(`footer-toggle-${tag}`);
+                const tableToggleElement = document.getElementById(`toggle-${tag}`);
                 if (indicatorElement) {
                     if (indicatorElement.tagName === 'SPAN') {
                         indicatorElement.className = `indicator ${data.bits[tag] ? 'on' : 'off'}`;
@@ -1126,6 +1235,10 @@
                 if (footerToggleElement) {
                     footerToggleElement.checked = data.bits[tag];
                     footerToggleElement.disabled = false;
+                }
+                if (tableToggleElement) {
+                    tableToggleElement.checked = data.bits[tag];
+                    tableToggleElement.disabled = false;
                 }
                 if (alarmTags.some(alarm => alarm.tag === tag && data.bits[tag])) {
                     hasActiveAlarms = true;
@@ -1176,13 +1289,20 @@
             };
         }
 
+        const setBitDebounced = debounce((tag, value) => {
+            socket.emit('set_bit', { tag, value });
+            console.log(`Setting bit ${tag} to ${value}`);
+        }, 50);  // Small debounce to prevent rapid fires
+
+        function setBit(tag, value) {
+            setBitDebounced(tag, value);
+        }
+
         const toggleBit = debounce((tag) => {
-            const toggle = document.getElementById(`footer-toggle-${tag}`);
-            if (toggle) {
-                const value = toggle.checked;
-                socket.emit('toggle_bit', { tag, value });
-                console.log(`Toggling bit ${tag}: ${value}`);
-            }
+            const footerToggle = document.getElementById(`footer-toggle-${tag}`);
+            const tableToggle = document.getElementById(`toggle-${tag}`);
+            const value = (footerToggle ? footerToggle.checked : tableToggle ? tableToggle.checked : false);
+            setBit(tag, value);
         }, 300);
 
         function writeWord(tag, inputId) {
@@ -1219,11 +1339,18 @@
             popup.style.display = popup.style.display === 'flex' ? 'none' : 'flex';
         }
 
-        // Attach event listeners to footer toggles
-        document.querySelectorAll('.footer-action input[type="checkbox"]').forEach(toggle => {
+        // Attach event listeners to all toggles
+        document.querySelectorAll('input[type="checkbox"][id^="footer-toggle-"], input[type="checkbox"][id^="toggle-"]').forEach(toggle => {
             toggle.addEventListener('change', () => {
-                const tag = toggle.id.replace('footer-toggle-', '');
-                toggleBit(tag);
+                let tag;
+                if (toggle.id.startsWith('footer-toggle-')) {
+                    tag = toggle.id.replace('footer-toggle-', '');
+                } else if (toggle.id.startsWith('toggle-')) {
+                    tag = toggle.id.replace('toggle-', '');
+                }
+                if (tag) {
+                    toggleBit(tag);
+                }
             });
         });
         // Initialize page
