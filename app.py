@@ -25,7 +25,7 @@ plc = PLCConnector(PLC_IP, PLC_PORT, retry_interval=5)  # Increased retry interv
 
 # Tags for bits and words (from SP.xlsx)
 BIT_TAGS = [
-    'M3', 'M13', 'M14', 'M15', 'M16', 'M17', 'M20', 'M21', 'M22', 'M23', 'M448', 'M449',
+    'M3', 'M7', 'M13', 'M14', 'M15', 'M16', 'M17', 'M20', 'M21', 'M22', 'M33',
     'M9', 'M100', 'M101', 'M102', 'M103', 'M200', 'M201', 'M202', 'M203',
     'M204', 'M205', 'M206', 'M207', 'M208', 'M209', 'M210', 'M211', 'M212', 'M213',
     'M214', 'M215', 'M216', 'M217', 'M218', 'M219', 'M220', 'M221', 'M222', 'M223',
@@ -33,9 +33,8 @@ BIT_TAGS = [
     'M234', 'M235', 'M236', 'M237', 'M238', 'M239', 'M240', 'M241', 'M242', 'M243',
     'M244', 'M245', 'M246', 'M247', 'M248', 'M300', 'M301', 'M305', 'M309', 'M313',
     'M317', 'M321', 'M325', 'M329', 'M400', 'M401', 'M405', 'M409', 'M413', 'M417',
-    'M423', 'M500', 'M501', 'M505', 'M509', 'M513', 'M517', 'M521', 'M525', 'M529',
-    'M533', 'M537', 'M541', 'M545', 'M549', 'M553', 'M557', 'M563', 'M569', 'M805',
-    'M806', 'M807', 'L100', 'L101', 'L102'
+    'M423', 'M448', 'M449','M500', 'M501', 'M505', 'M509', 'M513', 'M517', 'M521', 'M525', 'M529',
+    'M533', 'M537', 'M541', 'M545', 'M549', 'M553', 'M557', 'M563', 'M569', 'L100', 'L101', 'L102'
 ]
 
 WORD_TAGS = [
@@ -45,11 +44,10 @@ WORD_TAGS = [
     'D364', 'D366', 'D368', 'D410', 'D412', 'D414', 'D416', 'D418', 'D420', 'D422',
     'D424', 'D426', 'D428', 'D430', 'D432', 'D434', 'D436', 'D438', 'D440', 'D442',
     'D444', 'D446', 'D448', 'D450', 'D452', 'D454', 'D456', 'D458', 'D460', 'D462',
-    'D464', 'D466', 'D468', 'D500', 'D512', 'D550', 'D552', 'D554',
+    'D464', 'D466', 'D468', 'D500', 'D512', 'D520', 'D530', 'D550', 'D552', 'D554',
     'D610', 'D612', 'D614', 'D616', 'D618', 'D620', 'D622', 'D624', 'D626', 'D628',
     'D630', 'D632', 'D634', 'D636', 'D638', 'D640', 'D642', 'D644', 'D646', 'D648',
-    'D650', 'D652', 'D654', 'D656', 'D658', 'D660', 'D662', 'D664', 'D666', 'D668',
-    'D802', 'D812'
+    'D650', 'D652', 'D654', 'D656', 'D658', 'D660', 'D662', 'D664', 'D666', 'D668', 'D802', 'D812'
 ]
 
 # Runtime state
@@ -64,67 +62,27 @@ def poll_plc():
     """
     global last_bits, last_words
 
-    # Separate M and L for bits
-    m_tags = [tag for tag in BIT_TAGS if tag.startswith('M')]
-    l_tags = [tag for tag in BIT_TAGS if tag.startswith('L')]
-    if m_tags:
-        min_m = min(int(tag[1:]) for tag in m_tags)
-        max_m = max(int(tag[1:]) for tag in m_tags)
-        m_start = f"M{min_m}"
-        m_size = max_m - min_m + 1
-        m_indices = {tag: int(tag[1:]) - min_m for tag in m_tags}
-    else:
-        m_start = "M0"
-        m_size = 0
-        m_indices = {}
-    if l_tags:
-        min_l = min(int(tag[1:]) for tag in l_tags)
-        max_l = max(int(tag[1:]) for tag in l_tags)
-        l_start = f"L{min_l}"
-        l_size = max_l - min_l + 1
-        l_indices = {tag: int(tag[1:]) - min_l for tag in l_tags}
-    else:
-        l_start = "L0"
-        l_size = 0
-        l_indices = {}
-
-    # Words: dynamic size
+    # Define ranges based on BIT_TAGS (M7 to M807) and WORD_TAGS (D302 to D668)
+    bit_start = "M7"
+    bit_size = 569 - 7 + 1  # From M7 to M807
     word_start = "D302"
-    max_d = max(int(tag[1:]) for tag in WORD_TAGS)  # 812
-    word_size = max_d - 302 + 1  # 511 words
+    word_size = 812 - 302 + 1  # From D302 to D668
 
-    word_indices = {tag: int(tag[1:]) - 302 for tag in WORD_TAGS}
+    # Map tag names to their indices in the batch
+    bit_indices = {tag: int(tag[1:]) - 7 for tag in BIT_TAGS}  # e.g., M7 -> 0, M9 -> 2
+    word_indices = {tag: int(tag[1:]) - 302 for tag in WORD_TAGS}  # e.g., D302 -> 0, D304 -> 2
 
     # Force initial emission
     initial = True
 
     while True:
         try:
-            # Read M bits batch
-            if m_size > 0:
-                m_values = plc.batch_read_bits(m_start, m_size)
-                if not m_values or len(m_values) != m_size:
-                    raise ValueError("Incomplete M bits read")
-                m_bits = {tag: m_values[m_indices[tag]] for tag in m_tags}
-            else:
-                m_bits = {}
-
-            # Read L bits batch (separate)
-            if l_size > 0:
-                l_values = plc.batch_read_bits(l_start, l_size)
-                if not l_values or len(l_values) != l_size:
-                    raise ValueError("Incomplete L bits read")
-                l_bits = {tag: l_values[l_indices[tag]] for tag in l_tags}
-            else:
-                l_bits = {}
-
-            # Combine bits
-            bits = {**m_bits, **l_bits}
-
-            # Read words batch
+            # Read entire ranges in one call
+            bit_values = plc.batch_read_bits(bit_start, bit_size)
             word_values = plc.batch_read_words(word_start, word_size)
-            if not word_values or len(word_values) != word_size:
-                raise ValueError("Incomplete words read")
+
+            # Extract only the needed tags
+            bits = {tag: bit_values[bit_indices[tag]] for tag in BIT_TAGS}
             words = {tag: word_values[word_indices[tag]] for tag in WORD_TAGS}
 
             # Emit on first poll or if data changes
@@ -135,10 +93,10 @@ def poll_plc():
                 initial = False
 
         except Exception as e:
-            logging.error(f"[PLC Poll Error] {e}")  # Use logging
+            print(f"[PLC Poll Error] {e}")
             plc.reconnect()  # Attempt to reconnect on polling error
 
-        time.sleep(0.2)  # Slower poll for stability (adjust as needed)
+        time.sleep(0.1)  # Poll interval (100 ms)
 
 # Socket.IO events
 @socketio.on('connect')
@@ -200,6 +158,38 @@ def handle_write_word(data):
     except Exception as e:
         print(f"[Write Word Error] {tag}: {e}")
         emit('write_response', {'status': 'error', 'tag': tag, 'message': str(e)})
+        plc.reconnect()  # Attempt to reconnect on error
+
+@socketio.on('set_bit')
+def handle_set_bit(data):
+    """
+    Set a PLC bit to a specific value (true/false).
+    Expected payload: {'tag': 'M13', 'value': true} or {'tag': 'M13', 'value': false}
+    """
+    try:
+        # Extract tag and value from data (handle both dict and string for tag)
+        if isinstance(data, dict):
+            tag = data.get('tag')
+            value = data.get('value', True)  # Default to True if missing
+        else:
+            tag = data
+            value = True  # For legacy string-only emits
+
+        if not isinstance(value, bool):
+            value = bool(value)  # Ensure it's a boolean
+
+        print(f"[DEBUG] Set request for {tag} to {value}")
+        
+        # Validate tag
+        if tag not in BIT_TAGS:
+            emit('set_bit_response', {'status': 'error', 'tag': tag, 'message': f'Invalid tag: {tag}'})
+            return
+
+        plc.write_bit(tag, value)
+        emit('set_bit_response', {'status': 'success', 'tag': tag, 'value': value})
+    except Exception as e:
+        print(f"[Set Bit Error] {tag}: {e}")
+        emit('set_bit_response', {'status': 'error', 'tag': tag, 'message': str(e)})
         plc.reconnect()  # Attempt to reconnect on error
 
 # Routes

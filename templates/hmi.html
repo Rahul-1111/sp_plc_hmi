@@ -183,7 +183,7 @@
             table-layout: auto;
         }
         th, td {
-            padding: 1px;
+            padding: 8px; /* Updated from 1px to 8px for better readability */
             text-align: center;
             border-bottom: 1px solid #e0e0e0;
             white-space: nowrap;
@@ -656,7 +656,7 @@
                         <tr>
                             <td>10</td>
                             <td>FLAP CLOSE</td>
-                            <td><label class="toggle-switch"><input type="checkbox" id="toggle-M23"><span class="slider"></span></label></td>
+                            <td><label class="toggle-switch"><input type="checkbox" id="toggle-M33"><span class="slider"></span></label></td>
                         </tr>
                         <tr>
                             <td>11</td>
@@ -1062,18 +1062,6 @@
     <footer>
         <div class="footer-actions">
             <div class="footer-action">
-                <span>PLUNGER HOME</span>
-                <label class="toggle-switch"><input type="checkbox" id="footer-toggle-M805"><span class="slider"></span></label>
-            </div>
-            <div class="footer-action">
-                <span>RING FEEDER HOME</span>
-                <label class="toggle-switch"><input type="checkbox" id="footer-toggle-M806"><span class="slider"></span></label>
-            </div>
-            <div class="footer-action">
-                <span>ARM HOME</span>
-                <label class="toggle-switch"><input type="checkbox" id="footer-toggle-M807"><span class="slider"></span></label>
-            </div>
-            <div class="footer-action">
                 <span>PLUNGER SELECT</span>
                 <label class="toggle-switch"><input type="checkbox" id="footer-toggle-L100"><span class="slider"></span></label>
             </div>
@@ -1278,6 +1266,17 @@
                 console.error(`Failed to write to ${response.tag}: ${response.message}`);
                 const input = document.getElementById(`${response.tag}_input`);
                 if (input) input.classList.add('error');
+            }
+        });
+
+        socket.on('set_bit_response', (response) => {
+            if (response.status === 'success') {
+                console.log(`Successfully set ${response.tag} to ${response.value}`);
+            } else {
+                console.error(`Failed to set ${response.tag}: ${response.message}`);
+                // Optionally, revert checkbox or show alert
+                const toggle = document.querySelector(`input[id*="${response.tag}"]`);
+                if (toggle) toggle.checked = !response.value;  // Revert on error
             }
         });
 
