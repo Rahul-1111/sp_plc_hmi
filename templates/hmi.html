@@ -1338,27 +1338,18 @@
             popup.style.display = popup.style.display === 'flex' ? 'none' : 'flex';
         }
 
-        // Attach event listeners to all toggles
-        document.querySelectorAll('input[type="checkbox"][id^="footer-toggle-"], input[type="checkbox"][id^="toggle-"]').forEach(toggle => {
-            toggle.addEventListener('change', () => {
-                let tag;
-                if (toggle.id.startsWith('footer-toggle-')) {
-                    tag = toggle.id.replace('footer-toggle-', '');
-                } else if (toggle.id.startsWith('toggle-')) {
-                    tag = toggle.id.replace('toggle-', '');
-                }
-                if (tag) {
-                    toggleBit(tag);
-                }
-            });
-        });
-        // Initialize page
-        showPage('home');
-
         // Client-side validation for number inputs
         document.querySelectorAll('input[type="number"]').forEach(input => {
             const validateInput = () => {
-                const value = parseInt(input.value, 10);
+                const rawValue = input.value.trim();  // Trim whitespace
+                if (rawValue === '') {
+                    // Completely blank: no error
+                    input.classList.remove('error');
+                    input.title = '';  // Clear tooltip
+                    return;
+                }
+
+                const value = parseInt(rawValue, 10);
                 const min = parseInt(input.min, 10) || 0;
                 const max = parseInt(input.max, 10) || 99999;
                 const isValid = !isNaN(value) && value >= min && value <= max;
