@@ -57,16 +57,16 @@
             object-fit: contain;
         }
         .indicator-image-large {
-            width: 500px; /* Increased width for larger images */
-            height: 300px; /* Set fixed height for consistency */
+            width: 580px; /* Increased width for larger images */
+            height: 450px; /* Set fixed height for consistency */
             border: 2px solid #333; /* Adjusted frame width */
             border-radius: 8px;
             display: block;
             margin: 0 auto;
         }
         .indicator-video-large {
-            width: 620px; /* Increased width for larger videos */
-            height: 350px; /* Set fixed height for consistency */
+            width: 900px; /* Increased width for larger videos */
+            height: 505px; /* Set fixed height for consistency */
             object-fit: contain; /* Ensure video scales properly */
             border: 2px solid #333; /* Adjusted frame width */
             border-radius: 8px;
@@ -782,9 +782,9 @@
                         <td><span id="D500">0</span>
                         <input type="number" id="D500_input" min="0" max="50" step="1"><button class="write-button" onclick="writeWord('D500', 'D500_input')">Write</button></td>
                         <td><span id="D802">0</span>
-                        <input type="number" id="D802_input" min="0" max="8" step="0.1"><button class="write-button" onclick="writeWord('D802', 'D802_input')">Write</button></td>
+                        <input type="number" id="D802_input" min="0" max="8" step="1"><button class="write-button" onclick="writeWord('D802', 'D802_input')">Write</button></td>
                         <td><span id="D812">0</span>
-                        <input type="number" id="D812_input" min="0" max="10" step="0.1"><button class="write-button" onclick="writeWord('D812', 'D812_input')">Write</button></td>
+                        <input type="number" id="D812_input" min="0" max="10" step="1"><button class="write-button" onclick="writeWord('D812', 'D812_input')">Write</button></td>
                         <td><span id="D304">0</span>
                         <input type="number" id="D304_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D304', 'D304_input')">Write</button></td>
                         <td><span id="D306">0</span>
@@ -1248,17 +1248,11 @@
             alarmButton.classList.toggle('alarm-active', hasActiveAlarms);
             alarmButton.textContent = hasActiveAlarms ? 'ALARMS ⚠️' : 'ALARMS';
 
-            // Update word values (with descaling for D802/D812) - force Number() for safety
+            // Update word values (including D550, D552, D554)
             for (let tag in data.words) {
                 const element = document.getElementById(tag);
                 if (element) {
-                    let rawValue = Number(data.words[tag]);  // Ensure numeric
-                    let displayValue = rawValue;
-                    if (tag === 'D802' || tag === 'D812') {
-                        displayValue = (rawValue / 10).toFixed(1);  // Descale: 21 → 2.1
-                        console.log(`[DEBUG] Descaling ${tag}: raw=${rawValue} → display=${displayValue}`);  // Temp debug
-                    }
-                    element.textContent = displayValue;
+                    element.textContent = data.words[tag];
                 }
             }
         });
@@ -1268,36 +1262,10 @@
                 console.log(`Successfully wrote ${response.value} to ${response.tag}`);
                 const input = document.getElementById(`${response.tag}_input`);
                 if (input) input.classList.remove('error');
-
-                // Immediate UI update for span (descaled if float tag)
-                const span = document.getElementById(response.tag);
-                if (span) {
-                    let displayValue = response.value;
-                    if (response.tag === 'D802' || response.tag === 'D812') {
-                        displayValue = (Number(response.value) / 10).toFixed(1);  // Instant descale
-                        console.log(`[DEBUG] Immediate descale ${response.tag}: ${response.value} → ${displayValue}`);
-                    }
-                    span.textContent = displayValue;
-                }
-
-                // Re-enable the button after success
-                const button = document.querySelector(`button[onclick="writeWord('${response.tag}', '${response.tag}_input')"]`);
-                if (button) {
-                    button.disabled = false;
-                    button.textContent = 'Write';
-                    button.style.opacity = '1';
-                }
             } else {
                 console.error(`Failed to write to ${response.tag}: ${response.message}`);
                 const input = document.getElementById(`${response.tag}_input`);
                 if (input) input.classList.add('error');
-                // Re-enable button on error too
-                const button = document.querySelector(`button[onclick="writeWord('${response.tag}', '${response.tag}_input')"]`);
-                if (button) {
-                    button.disabled = false;
-                    button.textContent = 'Write';
-                    button.style.opacity = '1';
-                }
             }
         });
 
@@ -1336,44 +1304,22 @@
             setBit(tag, value);
         }, 300);
 
-        // Debounced writeWord to prevent rapid clicks
-        const writeWordDebounced = debounce((tag, inputId) => {
-            const input = document.getElementById(inputId);
-            if (!input) return;
-
-            let value;
-            if (tag === 'D802' || tag === 'D812') {
-                value = parseFloat(input.value);  // Float for these
-            } else {
-                value = parseInt(input.value, 10);  // Int for others
-            }
-            const min = parseFloat(input.min) || 0;
-            const max = parseFloat(input.max) || 99999;
-            const isValid = !isNaN(value) && value >= min && value <= max;
-            if (isValid) {
-                input.classList.remove('error');
-                socket.emit('write_word', { tag, value });
-                console.log(`Emitting write for ${tag}: ${value} (scaled to ${tag === 'D802' || tag === 'D812' ? value * 10 : value} on backend)`);
-            } else {
-                input.classList.add('error');
-                console.error(`Invalid value for ${tag}: ${input.value}`);
-            }
-        }, 300);  // 300ms debounce for writes
-
         function writeWord(tag, inputId) {
-            // Disable button immediately to prevent multi-clicks
-            const button = event ? event.target : document.querySelector(`button[onclick="writeWord('${tag}', '${inputId}')"]`);
-            if (button) {
-                button.disabled = true;
-                button.textContent = 'Sending...';
-                button.style.opacity = '0.6';
+            const input = document.getElementById(inputId);
+            if (input) {
+                const value = parseInt(input.value, 10);
+                const min = parseInt(input.min, 10) || 0;
+                const max = parseInt(input.max, 10) || 99999;
+                const isValid = !isNaN(value) && value >= min && value <= max;
+                if (isValid) {
+                    input.classList.remove('error');  // Clear error immediately if valid
+                    socket.emit('write_word', { tag, value });
+                    console.log(`Writing word ${tag}: ${value}`);
+                } else {
+                    input.classList.add('error');
+                    console.error(`Invalid value for ${tag}: ${input.value}`);
+                }
             }
-
-            // Use debounced version
-            writeWordDebounced(tag, inputId);
-
-            // Warn on rapid attempt (optional, for debugging)
-            console.warn(`Write attempted for ${tag} - debounced to prevent spam`);
         }
 
         function showPage(pageId) {
@@ -1412,15 +1358,9 @@
         // Client-side validation for number inputs
         document.querySelectorAll('input[type="number"]').forEach(input => {
             const validateInput = () => {
-                let value;
-                const inputTag = input.id.replace('_input', '');  // e.g., D802_input → D802
-                if (inputTag === 'D802' || inputTag === 'D812') {
-                    value = parseFloat(input.value);
-                } else {
-                    value = parseInt(input.value, 10);
-                }
-                const min = parseFloat(input.min) || 0;
-                const max = parseFloat(input.max) || 99999;
+                const value = parseInt(input.value, 10);
+                const min = parseInt(input.min, 10) || 0;
+                const max = parseInt(input.max, 10) || 99999;
                 const isValid = !isNaN(value) && value >= min && value <= max;
 
                 if (isValid) {
