@@ -57,16 +57,16 @@
             object-fit: contain;
         }
         .indicator-image-large {
-            width: 580px; /* Increased width for larger images */
-            height: 450px; /* Set fixed height for consistency */
+            width: 520px; /* Increased width for larger images */
+            height: 390px; /* Set fixed height for consistency */
             border: 2px solid #333; /* Adjusted frame width */
             border-radius: 8px;
             display: block;
             margin: 0 auto;
         }
         .indicator-video-large {
-            width: 900px; /* Increased width for larger videos */
-            height: 505px; /* Set fixed height for consistency */
+            width: 1000px; /* Increased width for larger videos */
+            height: 600px; /* Set fixed height for consistency */
             object-fit: contain; /* Ensure video scales properly */
             border: 2px solid #333; /* Adjusted frame width */
             border-radius: 8px;
@@ -171,6 +171,14 @@
             border-color: #dc3545;
             background-color: #ffe6e6;
         }
+        select {
+            padding: 6px;
+            font-size: 14px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            vertical-align: middle;
+            margin-left: 5px;
+        }
         table {
             width: 100%;
             max-width: 100%;
@@ -231,6 +239,7 @@
             position: sticky;
             top: 0;
             z-index: 1000;
+            flex-wrap: wrap;
         }
         .nav-button {
             margin: 0 10px;
@@ -528,14 +537,39 @@
     <h1>PRAGATI</h1>
 
     <div class="nav-bar">
-        <button class="nav-button" onclick="showPage('home')">HOME</button>
+        <button class="nav-button" onclick="showPage('home')">AUTO</button>
         <button class="nav-button" onclick="showPage('set-quantity')">SET QUANTITY</button>
         <button class="nav-button" id="alarm-button" onclick="toggleAlarmPopup()">ALARMS</button>
         <button class="status-button">
-            VFD Fq: <span id="D512">0</span>
+            VFD FQ: <span id="D512">0</span>
         </button>
         <button class="status-button">
-            Motor Pos: <span id="D302">0</span>
+            BIN NO: <span id="D302">0</span>
+        </button>
+        <button class="status-button">
+            Prod Select 1: 
+            <select id="D556_select" onchange="writeWord('D556', this.value)">
+                <option value="1">A</option>
+                <option value="2">B</option>
+                <option value="3">C</option>
+            </select>
+        </button>
+        <button class="status-button">
+            Prod Select 2: 
+            <select id="D558_select" onchange="writeWord('D558', this.value)">
+                <option value="1">A</option>
+                <option value="2">B</option>
+                <option value="3">C</option>
+            </select>
+        </button>
+        <button class="status-button">
+            Prod Count 1: <span id="D560">0</span>
+        </button>
+        <button class="status-button">
+            Prod Count 2: <span id="D562">0</span>
+        </button>
+        <button class="status-button">
+            Total Count: <span id="D564">0</span>
         </button>
     </div>
 
@@ -550,7 +584,7 @@
     <div id="home" class="page active">
         <div class="general-container">
             <div class="group general-read-values">
-                <h3>General - Read Values</h3>
+                <h3>Input</h3>
                 <table>
                     <thead>
                         <tr>
@@ -562,43 +596,43 @@
                     <tbody>
                         <tr>
                             <td>1</td>
-                            <td>EMG_STOP</td>
+                            <td>EMG STOP</td>
                             <td><span class="indicator off" id="indicator-M9"></span></td>
                         </tr>
                         <tr>
                             <td>2</td>
-                            <td>PLUNGER_ASSLY_AUTO_READY</td>
+                            <td>PLUNGER ASSLY AUTO READY</td>
                             <td><span class="indicator off" id="indicator-M300"></span></td>
                         </tr>
                         <tr>
                             <td>3</td>
-                            <td>RING_FEEDER_ASSLY_AUTO_READY</td>
+                            <td>RING FEEDER ASSLY AUTO READY</td>
                             <td><span class="indicator off" id="indicator-M400"></span></td>
                         </tr>
                         <tr>
                             <td>4</td>
-                            <td>ARM_ASSLY_AUTO_READY</td>
+                            <td>ARM ASSLY AUTO READY</td>
                             <td><span class="indicator off" id="indicator-M500"></span></td>
                         </tr>
                         <tr>
                             <td>5</td>
-                            <td>PLUNGER_ASSLY_AUTO_ON</td>
+                            <td>PLUNGER ASSLY AUTO ON</td>
                             <td><span class="indicator off" id="indicator-M301"></span></td>
                         </tr>
                         <tr>
                             <td>6</td>
-                            <td>RING_FEEDER_ASSLY_AUTO_ON</td>
+                            <td>RING FEEDER ASSLY AUTO ON</td>
                             <td><span class="indicator off" id="indicator-M401"></span></td>
                         </tr>
                         <tr>
                             <td>7</td>
-                            <td>ARM_ASSLY_AUTO_ON</td>
+                            <td>ARM ASSLY AUTO ON</td>
                             <td><span class="indicator off" id="indicator-M501"></span></td>
                         </tr>
                     </tbody>
                 </table>
 
-                <h3>Controls</h3>
+                <h3>Output</h3>
                 <table>
                     <thead>
                         <tr>
@@ -770,11 +804,11 @@
             <table>
                 <thead>
                     <tr>
-                        <th>VFD_WRITE</th>
-                        <th>SERVO_TRQ</th>
-                        <th>SERVO_SPEED</th>
-                        <th>PLUNGER_HOLD_TIME</th>
-                        <th>SERVO_FWD_TIME</th>
+                        <th>VFD WRITE</th>
+                        <th>SERVO TRQ</th>
+                        <th>SERVO SPEED</th>
+                        <th>PLUNGER HOLD TIME</th>
+                        <th>SERVO FWD TIME</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -810,56 +844,56 @@
                         <tbody>
                             <tr>
                                 <td>1</td>
-                                <td>PLUNGER_HSG_ARM_BT_40</td>
+                                <td>PLUNGER HSG ARM BT 40</td>
                                 <td><span id="D310">0</span> <input type="number" id="D310_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D310', 'D310_input')">Write</button></td>
                                 <td><span id="D410">0</span></td>
                                 <td><span id="D610">0</span> <input type="number" id="D610_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D610', 'D610_input')">Write</button></td>
                             </tr>
                             <tr>
                                 <td>2</td>
-                                <td>OIL_SEAL_OS15X21X3_IKO_MAKE</td>
+                                <td>OIL SEAL OS15X21X3 IKO MAKE</td>
                                 <td><span id="D312">0</span> <input type="number" id="D312_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D312', 'D312_input')">Write</button></td>
                                 <td><span id="D412">0</span></td>
                                 <td><span id="D612">0</span> <input type="number" id="D612_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D612', 'D612_input')">Write</button></td>
                             </tr>
                             <tr>
                                 <td>3</td>
-                                <td>PLUNGER_ARM_BT40</td>
+                                <td>PLUNGER ARM BT40</td>
                                 <td><span id="D314">0</span> <input type="number" id="D314_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D314', 'D314_input')">Write</button></td>
                                 <td><span id="D414">0</span></td>
                                 <td><span id="D614">0</span> <input type="number" id="D614_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D614', 'D614_input')">Write</button></td>
                             </tr>
                             <tr>
                                 <td>4</td>
-                                <td>PARALLEL_KEY_4X4X12</td>
+                                <td>PARALLEL KEY 4X4X12</td>
                                 <td><span id="D316">0</span> <input type="number" id="D316_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D316', 'D316_input')">Write</button></td>
                                 <td><span id="D416">0</span></td>
                                 <td><span id="D616">0</span> <input type="number" id="D616_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D616', 'D616_input')">Write</button></td>
                             </tr>
                             <tr>
                                 <td>5</td>
-                                <td>SPRING_PLUNGER_BT_40_ARM</td>
+                                <td>SPRING PLUNGER BT 40 ARM</td>
                                 <td><span id="D318">0</span> <input type="number" id="D318_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D318', 'D318_input')">Write</button></td>
                                 <td><span id="D418">0</span></td>
                                 <td><span id="D618">0</span> <input type="number" id="D618_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D618', 'D618_input')">Write</button></td>
                             </tr>
                             <tr>
                                 <td>6</td>
-                                <td>PLUNGERNUT_ARM_BT_40</td>
+                                <td>PLUNGERNUT ARM BT 40</td>
                                 <td><span id="D320">0</span> <input type="number" id="D320_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D320', 'D320_input')">Write</button></td>
                                 <td><span id="D420">0</span></td>
                                 <td><span id="D620">0</span> <input type="number" id="D620_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D620', 'D620_input')">Write</button></td>
                             </tr>
                             <tr>
                                 <td>7</td>
-                                <td>O_RING_23X15</td>
+                                <td>O RING 23X15</td>
                                 <td><span id="D322">0</span> <input type="number" id="D322_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D322', 'D322_input')">Write</button></td>
                                 <td><span id="D422">0</span></td>
                                 <td><span id="D622">0</span> <input type="number" id="D622_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D622', 'D622_input')">Write</button></td>
                             </tr>
                             <tr>
                                 <td>8</td>
-                                <td>O_RING_28X2</td>
+                                <td>O RING 28X2</td>
                                 <td><span id="D324">0</span> <input type="number" id="D324_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D324', 'D324_input')">Write</button></td>
                                 <td><span id="D424">0</span></td>
                                 <td><span id="D624">0</span> <input type="number" id="D624_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D624', 'D624_input')">Write</button></td>
@@ -882,35 +916,35 @@
                         <tbody>
                             <tr>
                                 <td>1</td>
-                                <td>RING_FEEDER_HSG_BT40</td>
+                                <td>RING FEEDER HSG BT40</td>
                                 <td><span id="D326">0</span> <input type="number" id="D326_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D326', 'D326_input')">Write</button></td>
                                 <td><span id="D426">0</span></td>
                                 <td><span id="D626">0</span> <input type="number" id="D626_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D626', 'D626_input')">Write</button></td>
                             </tr>
                             <tr>
                                 <td>2</td>
-                                <td>RING_FEEDER_SPACER_ATC</td>
+                                <td>RING FEEDER SPACER ATC</td>
                                 <td><span id="D328">0</span> <input type="number" id="D328_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D328', 'D328_input')">Write</button></td>
                                 <td><span id="D428">0</span></td>
                                 <td><span id="D628">0</span> <input type="number" id="D628_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D628', 'D628_input')">Write</button></td>
                             </tr>
                             <tr>
                                 <td>3</td>
-                                <td>BTP80_LOCKING_ELEMENT_35X40</td>
+                                <td>BTP80 LOCKING ELEMENT 35X40</td>
                                 <td><span id="D330">0</span> <input type="number" id="D330_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D330', 'D330_input')">Write</button></td>
                                 <td><span id="D430">0</span></td>
                                 <td><span id="D630">0</span> <input type="number" id="D630_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D630', 'D630_input')">Write</button></td>
                             </tr>
                             <tr>
                                 <td>4</td>
-                                <td>RING_FEEDER_CLAMP_BT40</td>
+                                <td>RING FEEDER CLAMP BT40</td>
                                 <td><span id="D332">0</span> <input type="number" id="D332_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D332', 'D332_input')">Write</button></td>
                                 <td><span id="D432">0</span></td>
                                 <td><span id="D632">0</span> <input type="number" id="D632_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D632', 'D632_input')">Write</button></td>
                             </tr>
                             <tr>
                                 <td>5</td>
-                                <td>SOC_HD_SCREW_6X25</td>
+                                <td>SOC HD SCREW 6X25</td>
                                 <td><span id="D334">0</span> <input type="number" id="D334_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D334', 'D334_input')">Write</button></td>
                                 <td><span id="D434">0</span></td>
                                 <td><span id="D634">0</span> <input type="number" id="D634_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D634', 'D634_input')">Write</button></td>
@@ -935,119 +969,119 @@
                         <tbody>
                             <tr>
                                 <td>1</td>
-                                <td>ARM_BODY_225</td>
+                                <td>ARM BODY</td>
                                 <td><span id="D336">0</span> <input type="number" id="D336_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D336', 'D336_input')">Write</button></td>
                                 <td><span id="D436">0</span></td>
                                 <td><span id="D636">0</span> <input type="number" id="D636_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D636', 'D636_input')">Write</button></td>
                             </tr>
                             <tr>
                                 <td>2</td>
-                                <td>LFB_1820_DU_BUSH_18XOD_20XL_20</td>
+                                <td>LFB 1820 DU BUSH 18XOD 20XL 20</td>
                                 <td><span id="D338">0</span> <input type="number" id="D338_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D338', 'D338_input')">Write</button></td>
                                 <td><span id="D438">0</span></td>
                                 <td><span id="D638">0</span> <input type="number" id="D638_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D638', 'D638_input')">Write</button></td>
                             </tr>
                             <tr>
                                 <td>3</td>
-                                <td>LFB_1215_DU_BUSH_12XOD_14XL_15</td>
+                                <td>LFB 1215 DU BUSH 12XOD 14XL 15</td>
                                 <td><span id="D340">0</span> <input type="number" id="D340_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D340', 'D340_input')">Write</button></td>
                                 <td><span id="D440">0</span></td>
                                 <td><span id="D640">0</span> <input type="number" id="D640_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D640', 'D640_input')">Write</button></td>
                             </tr>
                             <tr>
                                 <td>4</td>
-                                <td>OIL_SEAL_OS18X26X4_IKO_MAKE</td>
+                                <td>OIL SEAL OS18X26X4 IKO MAKE</td>
                                 <td><span id="D342">0</span> <input type="number" id="D342_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D342', 'D342_input')">Write</button></td>
                                 <td><span id="D442">0</span></td>
                                 <td><span id="D642">0</span> <input type="number" id="D642_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D642', 'D642_input')">Write</button></td>
                             </tr>
                             <tr>
                                 <td>5</td>
-                                <td>SOC_HD_SCREW_6X30</td>
+                                <td>SOC HD SCREW 6X30</td>
                                 <td><span id="D348">0</span> <input type="number" id="D348_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D348', 'D348_input')">Write</button></td>
                                 <td><span id="D444">0</span></td>
                                 <td><span id="D644">0</span> <input type="number" id="D644_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D644', 'D644_input')">Write</button></td>
                             </tr>
                             <tr>
                                 <td>6</td>
-                                <td>PUSHROD_225</td>
+                                <td>PUSHROD</td>
                                 <td><span id="D350">0</span> <input type="number" id="D350_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D350', 'D350_input')">Write</button></td>
                                 <td><span id="D446">0</span></td>
                                 <td><span id="D646">0</span> <input type="number" id="D646_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D646', 'D646_input')">Write</button></td>
                             </tr>
                             <tr>
                                 <td>7</td>
-                                <td>SPRING_PUSHROAD_BT40</td>
+                                <td>SPRING PUSHROAD BT40</td>
                                 <td><span id="D352">0</span> <input type="number" id="D352_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D352', 'D352_input')">Write</button></td>
                                 <td><span id="D448">0</span></td>
                                 <td><span id="D648">0</span> <input type="number" id="D648_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D648', 'D648_input')">Write</button></td>
                             </tr>
                             <tr>
                                 <td>8</td>
-                                <td>ANTIROTATION_KEY</td>
+                                <td>ANTIROTATION KEY</td>
                                 <td><span id="D354">0</span> <input type="number" id="D354_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D354', 'D354_input')">Write</button></td>
                                 <td><span id="D450">0</span></td>
                                 <td><span id="D650">0</span> <input type="number" id="D650_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D650', 'D650_input')">Write</button></td>
                             </tr>
                             <tr>
                                 <td>9</td>
-                                <td>ORING_12X2</td>
+                                <td>ORING 12X2</td>
                                 <td><span id="D356">0</span> <input type="number" id="D356_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D356', 'D356_input')">Write</button></td>
                                 <td><span id="D452">0</span></td>
                                 <td><span id="D652">0</span> <input type="number" id="D652_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D652', 'D652_input')">Write</button></td>
                             </tr>
                             <tr>
                                 <td>10</td>
-                                <td>SOC_HD_SCREW_5X10</td>
+                                <td>SOC HD SCREW 5X10</td>
                                 <td><span id="D358">0</span> <input type="number" id="D358_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D358', 'D358_input')">Write</button></td>
                                 <td><span id="D454">0</span></td>
                                 <td><span id="D654">0</span> <input type="number" id="D654_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D654', 'D654_input')">Write</button></td>
                             </tr>
                             <tr>
                                 <td>11</td>
-                                <td>GRIPPER_PLT_BT40_16MNCR5</td>
+                                <td>GRIPPER PLT BT40 16MNCR5</td>
                                 <td><span id="D360">0</span> <input type="number" id="D360_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D360', 'D360_input')">Write</button></td>
                                 <td><span id="D456">0</span></td>
                                 <td><span id="D656">0</span> <input type="number" id="D656_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D656', 'D656_input')">Write</button></td>
                             </tr>
                             <tr>
                                 <td>12</td>
-                                <td>SOC_HD_SCREW_8X20</td>
+                                <td>SOC HD SCREW 8X20</td>
                                 <td><span id="D362">0</span> <input type="number" id="D362_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D362', 'D362_input')">Write</button></td>
                                 <td><span id="D458">0</span></td>
                                 <td><span id="D658">0</span> <input type="number" id="D658_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D658', 'D658_input')">Write</button></td>
                             </tr>
                             <tr>
                                 <td>13</td>
-                                <td>ITCP_PIN_8X25</td>
+                                <td>ITCP PIN 8X25</td>
                                 <td><span id="D364">0</span> <input type="number" id="D364_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D364', 'D364_input')">Write</button></td>
                                 <td><span id="D460">0</span></td>
                                 <td><span id="D660">0</span> <input type="number" id="D660_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D660', 'D660_input')">Write</button></td>
                             </tr>
                             <tr>
                                 <td>14</td>
-                                <td>ARM_KEY_SK40</td>
+                                <td>ARM KEY SK40</td>
                                 <td><span id="D366">0</span> <input type="number" id="D366_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D366', 'D366_input')">Write</button></td>
                                 <td><span id="D462">0</span></td>
                                 <td><span id="D662">0</span> <input type="number" id="D662_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D662', 'D662_input')">Write</button></td>
                             </tr>
                             <tr>
                                 <td>15</td>
-                                <td>CSK_SCREW_6X10</td>
+                                <td>CSK SCREW 6X10</td>
                                 <td><span id="D368">0</span> <input type="number" id="D368_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D368', 'D368_input')">Write</button></td>
                                 <td><span id="D464">0</span></td>
                                 <td><span id="D664">0</span> <input type="number" id="D664_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D664', 'D664_input')">Write</button></td>
                             </tr>
                             <tr>
                                 <td>16</td>
-                                <td>SPARE_RING_FEEDER_HSG_ASSY_40SERIES</td>
+                                <td>SPARE RING FEEDER HSG ASSY 40SERIES</td>
                                 <td><span id="D344">0</span> <input type="number" id="D344_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D344', 'D344_input')">Write</button></td>
                                 <td><span id="D466">0</span></td>
                                 <td><span id="D666">0</span> <input type="number" id="D666_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D666', 'D666_input')">Write</button></td>
                             </tr>
                             <tr>
                                 <td>17</td>
-                                <td>SPARE_PLUNGER_HSG_ASSY_40_SERIES</td>
+                                <td>SPARE PLUNGER HSG ASSY 40 SERIES</td>
                                 <td><span id="D346">0</span> <input type="number" id="D346_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D346', 'D346_input')">Write</button></td>
                                 <td><span id="D468">0</span></td>
                                 <td><span id="D668">0</span> <input type="number" id="D668_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D668', 'D668_input')">Write</button></td>
@@ -1079,74 +1113,74 @@
     <script>
         const socket = io();
         const alarmTags = [
-            { tag: 'M200', name: 'MAIN_EMG_STOP' },
-            { tag: 'M201', name: 'PLUNGER_ASSLY_EMG_STOP' },
-            { tag: 'M202', name: 'RING_FEEDER_ASSLY_EMG_STOP' },
-            { tag: 'M203', name: 'ARM_ASSLY_EMG_STOP' },
-            { tag: 'M204', name: 'INDEXER_MOTOR_TRIP' },
-            { tag: 'M205', name: 'ARM_MPCB_TRIP' },
-            { tag: 'M206', name: 'SERVO_MOTOR_TRIP' },
-            { tag: 'M207', name: 'PLUNGER_ASSLY_CYL_FWD_RD' },
-            { tag: 'M208', name: 'PLUNGER_ASSLY_CYL_REV_RD' },
-            { tag: 'M209', name: 'CYL_UP_RING_FEEDER_ASSLY_FWD_RD' },
-            { tag: 'M210', name: 'CYL_UP_RING_FEEDER_ASSLY_REV_RD' },
-            { tag: 'M211', name: 'CYL_DOWN_RING_FEEDER_ASSLY_FWD_RD' },
-            { tag: 'M212', name: 'CYL_DOWN_RING_FEEDER_ASSLY_REV_RD' },
-            { tag: 'M213', name: 'FLP_CYL_CLOSE_FWD_RD' },
-            { tag: 'M214', name: 'FLP_CYL_OPEN_REV_RD' },
-            { tag: 'M215', name: 'CYL5_FWD_RD' },
-            { tag: 'M216', name: 'CYL5_REV_RD' },
-            { tag: 'M217', name: 'CYL6_FWD_RD' },
-            { tag: 'M218', name: 'CYL6_REV_RD' },
-            { tag: 'M219', name: 'PLUNGER_HSG_ARM_BT40_EMPTY' },
-            { tag: 'M220', name: 'OIL_SEAL_OS15X21X3_IKO_MAKE_EMPTY' },
-            { tag: 'M221', name: 'PLUNGER_ARM_BT40_EMPTY' },
-            { tag: 'M222', name: 'PARALLEL_KEY_4X4X12_EMPTY' },
-            { tag: 'M223', name: 'SPRING_PLUNGER_BT40_ARM_EMPTY' },
-            { tag: 'M224', name: 'PLUNGERNUT_ARM_BT_40_EMPTY' },
-            { tag: 'M225', name: 'O_RING_23X1_5_EMPTY' },
-            { tag: 'M226', name: 'O_RING_28X2_EMPTY' },
-            { tag: 'M227', name: 'RING_FEEDER_HSG_BT40_EMPTY' },
-            { tag: 'M228', name: 'RING_FEDER_SPACER_EMPTY' },
-            { tag: 'M229', name: 'BTP_80_LOCKING_ELEMENT_35X40_EMPTY' },
-            { tag: 'M230', name: 'RING_FEEDER_CLAMP_BT40_EMPTY' },
-            { tag: 'M231', name: 'SOC_HD_SCREW_6X25_EMPTY' },
-            { tag: 'M232', name: 'ARM_BODY_225_EMPTY' },
-            { tag: 'M233', name: 'LFB_1820_DU_BUSH_18XOD_20XL_20_EMPTY' },
-            { tag: 'M234', name: 'LFB_1215_DU_BUSH_12XOD_14XL_15_EMPTY' },
-            { tag: 'M235', name: 'OIL_SEAL_OS18X26X4_IKO_MAKE_EMPTY' },
-            { tag: 'M236', name: 'RING_FEEDER_HSG_ASSY_40SERIES_EMPTY' },
-            { tag: 'M237', name: 'PLUNGER_HSG_ASSY_40SERIES_EMPTY' },
-            { tag: 'M238', name: 'SOC_HD_SCREW_6X30_BIN_18_EMPTY' },
-            { tag: 'M239', name: 'PUSHROD_225_BIN_19_EMPTY' },
-            { tag: 'M240', name: 'SPRING_PUSHROD_BT40_EMPTY' },
-            { tag: 'M241', name: 'ANTI_ROTATION_KEY_EMPTY' },
-            { tag: 'M242', name: 'O_RING_12X2_EMPTY' },
-            { tag: 'M243', name: 'SOC_HD_SCREW_5X10_EMPTY' },
-            { tag: 'M244', name: 'GRIPPER_PLT_BT40_16_MNCR5_EMPTY' },
-            { tag: 'M245', name: 'SOC_HD_SCREW_8X20_EMPTY' },
-            { tag: 'M246', name: 'ITCP_PIN_8X25_EMPTY' },
-            { tag: 'M247', name: 'ARM_KEY_SK40_EMPTY' },
-            { tag: 'M248', name: 'CSK_SCREW_6X10_EMPTY' }
+            { tag: 'M200', name: 'MAIN EMG STOP' },
+            { tag: 'M201', name: 'PLUNGER ASSLY EMG STOP' },
+            { tag: 'M202', name: 'RING FEEDER ASSLY EMG STOP' },
+            { tag: 'M203', name: 'ARM ASSLY EMG STOP' },
+            { tag: 'M204', name: 'INDEXER MOTOR TRIP' },
+            { tag: 'M205', name: 'ARM MPCB TRIP' },
+            { tag: 'M206', name: 'SERVO MOTOR TRIP' },
+            { tag: 'M207', name: 'PLUNGER ASSLY CYL FWD RD' },
+            { tag: 'M208', name: 'PLUNGER ASSLY CYL REV RD' },
+            { tag: 'M209', name: 'CYL UP RING FEEDER ASSLY FWD RD' },
+            { tag: 'M210', name: 'CYL UP RING FEEDER ASSLY REV RD' },
+            { tag: 'M211', name: 'CYL DOWN RING FEEDER ASSLY FWD RD' },
+            { tag: 'M212', name: 'CYL DOWN RING FEEDER ASSLY REV RD' },
+            { tag: 'M213', name: 'FLP CYL CLOSE FWD RD' },
+            { tag: 'M214', name: 'FLP CYL OPEN REV RD' },
+            { tag: 'M215', name: 'CYL5 FWD RD' },
+            { tag: 'M216', name: 'CYL5 REV RD' },
+            { tag: 'M217', name: 'CYL6 FWD RD' },
+            { tag: 'M218', name: 'CYL6 REV RD' },
+            { tag: 'M219', name: 'PLUNGER HSG ARM BT40 EMPTY' },
+            { tag: 'M220', name: 'OIL SEAL OS15X21X3 IKO MAKE EMPTY' },
+            { tag: 'M221', name: 'PLUNGER ARM BT40 EMPTY' },
+            { tag: 'M222', name: 'PARALLEL KEY 4X4X12 EMPTY' },
+            { tag: 'M223', name: 'SPRING PLUNGER BT40 ARM EMPTY' },
+            { tag: 'M224', name: 'PLUNGERNUT ARM BT 40 EMPTY' },
+            { tag: 'M225', name: 'O RING 23X1 5 EMPTY' },
+            { tag: 'M226', name: 'O RING 28X2 EMPTY' },
+            { tag: 'M227', name: 'RING FEEDER HSG BT40 EMPTY' },
+            { tag: 'M228', name: 'RING FEDER SPACER EMPTY' },
+            { tag: 'M229', name: 'BTP 80 LOCKING ELEMENT 35X40 EMPTY' },
+            { tag: 'M230', name: 'RING FEEDER CLAMP BT40 EMPTY' },
+            { tag: 'M231', name: 'SOC HD SCREW 6X25 EMPTY' },
+            { tag: 'M232', name: 'ARM BODY 225 EMPTY' },
+            { tag: 'M233', name: 'LFB 1820 DU BUSH 18XOD 20XL 20 EMPTY' },
+            { tag: 'M234', name: 'LFB 1215 DU BUSH 12XOD 14XL 15 EMPTY' },
+            { tag: 'M235', name: 'OIL SEAL OS18X26X4 IKO MAKE EMPTY' },
+            { tag: 'M236', name: 'RING FEEDER HSG ASSY 40SERIES EMPTY' },
+            { tag: 'M237', name: 'PLUNGER HSG ASSY 40SERIES EMPTY' },
+            { tag: 'M238', name: 'SOC HD SCREW 6X30 BIN 18 EMPTY' },
+            { tag: 'M239', name: 'PUSHROD 225 BIN 19 EMPTY' },
+            { tag: 'M240', name: 'SPRING PUSHROD BT40 EMPTY' },
+            { tag: 'M241', name: 'ANTI ROTATION KEY EMPTY' },
+            { tag: 'M242', name: 'O RING 12X2 EMPTY' },
+            { tag: 'M243', name: 'SOC HD SCREW 5X10 EMPTY' },
+            { tag: 'M244', name: 'GRIPPER PLT BT40 16 MNCR5 EMPTY' },
+            { tag: 'M245', name: 'SOC HD SCREW 8X20 EMPTY' },
+            { tag: 'M246', name: 'ITCP PIN 8X25 EMPTY' },
+            { tag: 'M247', name: 'ARM KEY SK40 EMPTY' },
+            { tag: 'M248', name: 'CSK SCREW 6X10 EMPTY' }
         ];
 
         const imageMap = {
-            '1': { image: '/static/ASSLY_IMAGES/1.jpeg', name: 'PLUNGER_HSG_ARM_BT_40' },
-            '2': { image: '/static/ASSLY_IMAGES/2.jpeg', name: 'OIL_SEAL_OS15X21X3_IKO_MAKE' },
-            '3': { image: '/static/ASSLY_IMAGES/3.jpeg', name: 'PLUNGER_ARM_BT40' },
-            '4': { image: '/static/ASSLY_IMAGES/4.jpeg', name: 'PARALLEL_KEY_4X4X12' },
-            '5': { image: '/static/ASSLY_IMAGES/5.jpeg', name: 'SPRING_PLUNGER_BT_40_ARM' },
-            '6': { image: '/static/ASSLY_IMAGES/6.jpeg', name: 'PLUNGERNUT_ARM_BT_40' },
-            '7': { image: '/static/ASSLY_IMAGES/7.jpeg', name: 'O_RING_23X15' },
-            '8': { image: '/static/ASSLY_IMAGES/8.jpeg', name: 'O_RING_28X2' },
-            '9': { image: '/static/ASSLY_IMAGES/9.jpeg', name: 'RING_FEEDER_HSG_BT40' },
-            '10': { image: '/static/ASSLY_IMAGES/10.jpeg', name: 'RING_FEEDER_SPACER_ATC' },
-            '11': { image: '/static/ASSLY_IMAGES/11.jpeg', name: 'BTP80_LOCKING_ELEMENT_35X40' },
-            '12': { image: '/static/ASSLY_IMAGES/12.jpeg', name: 'RING_FEEDER_CLAMP_BT40' },
-            '13': { image: '/static/ASSLY_IMAGES/13.jpeg', name: 'SOC_HD_SCREW_6X25' },
-            '14': { image: '/static/ASSLY_IMAGES/14.jpeg', name: 'ARM_BODY_225' },
-            '15': { image: '/static/ASSLY_IMAGES/15.jpeg', name: 'LFB_1820_DU_BUSH_18XOD_20XL_20' },
-            '16': { image: '/static/ASSLY_IMAGES/16.jpeg', name: 'LFB_1215_DU_BUSH_12XOD_14XL_15' },
+            '1': { image: '/static/ASSLY_IMAGES/1.jpeg', name: 'PLUNGER HSG ARM BT 40' },
+            '2': { image: '/static/ASSLY_IMAGES/2.jpeg', name: 'OIL SEAL OS15X21X3 IKO MAKE' },
+            '3': { image: '/static/ASSLY_IMAGES/3.jpeg', name: 'PLUNGER ARM BT40' },
+            '4': { image: '/static/ASSLY_IMAGES/4.jpeg', name: 'PARALLEL KEY 4X4X12' },
+            '5': { image: '/static/ASSLY_IMAGES/5.jpeg', name: 'SPRING PLUNGER BT 40 ARM' },
+            '6': { image: '/static/ASSLY_IMAGES/6.jpeg', name: 'PLUNGERNUT ARM BT 40' },
+            '7': { image: '/static/ASSLY_IMAGES/7.jpeg', name: 'O RING 23X15' },
+            '8': { image: '/static/ASSLY_IMAGES/8.jpeg', name: 'O RING 28X2' },
+            '9': { image: '/static/ASSLY_IMAGES/9.jpeg', name: 'RING FEEDER HSG BT40' },
+            '10': { image: '/static/ASSLY_IMAGES/10.jpeg', name: 'RING FEEDER SPACER ATC' },
+            '11': { image: '/static/ASSLY_IMAGES/11.jpeg', name: 'BTP80 LOCKING ELEMENT 35X40' },
+            '12': { image: '/static/ASSLY_IMAGES/12.jpeg', name: 'RING FEEDER CLAMP BT40' },
+            '13': { image: '/static/ASSLY_IMAGES/13.jpeg', name: 'SOC HD SCREW 6X25' },
+            '14': { image: '/static/ASSLY_IMAGES/14.jpeg', name: 'ARM BODY 225' },
+            '15': { image: '/static/ASSLY_IMAGES/15.jpeg', name: 'LFB 1820 DU BUSH 18XOD 20XL 20' },
+            '16': { image: '/static/ASSLY_IMAGES/16.jpeg', name: 'LFB 1215 DU BUSH 12XOD 14XL 15' },
             'default': { image: '/static/ASSLY_IMAGES/off.jpeg', name: 'None' }
         };
 
@@ -1248,11 +1282,24 @@
             alarmButton.classList.toggle('alarm-active', hasActiveAlarms);
             alarmButton.textContent = hasActiveAlarms ? 'ALARMS ⚠️' : 'ALARMS';
 
-            // Update word values (including D550, D552, D554)
+            // Update word values (including D550, D552, D554, and new registers)
             for (let tag in data.words) {
                 const element = document.getElementById(tag);
                 if (element) {
                     element.textContent = data.words[tag];
+                }
+                // Update dropdown selects for D556 and D558
+                if (tag === 'D556') {
+                    const select = document.getElementById('D556_select');
+                    if (select) {
+                        select.value = data.words[tag] || '1';
+                    }
+                }
+                if (tag === 'D558') {
+                    const select = document.getElementById('D558_select');
+                    if (select) {
+                        select.value = data.words[tag] || '1';
+                    }
                 }
             }
         });
@@ -1262,6 +1309,14 @@
                 console.log(`Successfully wrote ${response.value} to ${response.tag}`);
                 const input = document.getElementById(`${response.tag}_input`);
                 if (input) input.classList.remove('error');
+                // Update display span if exists
+                const span = document.getElementById(response.tag);
+                if (span) span.textContent = response.value;
+                // Update select if it's a dropdown tag
+                if (response.tag === 'D556' || response.tag === 'D558') {
+                    const select = document.getElementById(`${response.tag}_select`);
+                    if (select) select.value = response.value;
+                }
             } else {
                 console.error(`Failed to write to ${response.tag}: ${response.message}`);
                 const input = document.getElementById(`${response.tag}_input`);
@@ -1304,26 +1359,44 @@
             setBit(tag, value);
         }, 300);
 
-        function writeWord(tag, inputId) {
-            const input = document.getElementById(inputId);
-            if (input) {
-                const rawValue = input.value.trim();
-                if (rawValue === '') {
-                    console.log(`Skipping write for ${tag}: blank value`);
-                    input.classList.remove('error');  // Ensure no error on blank
-                    return;  // Don't send blank to server
+        function writeWord(tag, inputIdOrValue) {
+            let value;
+            if (typeof inputIdOrValue === 'string' && inputIdOrValue.endsWith('_select')) {
+                // For dropdown selects, value is directly from select
+                const select = document.getElementById(inputIdOrValue);
+                if (select) {
+                    value = parseInt(select.value, 10);
                 }
-                const value = parseInt(rawValue, 10);
-                const min = parseInt(input.min, 10) || 0;
-                const max = parseInt(input.max, 10) || 99999;
+            } else if (typeof inputIdOrValue === 'string') {
+                // For number inputs
+                const input = document.getElementById(inputIdOrValue);
+                if (input) {
+                    const rawValue = input.value.trim();
+                    if (rawValue === '') {
+                        console.log(`Skipping write for ${tag}: blank value`);
+                        input.classList.remove('error');  // Ensure no error on blank
+                        return;  // Don't send blank to server
+                    }
+                    value = parseInt(rawValue, 10);
+                }
+            } else {
+                // Direct value
+                value = parseInt(inputIdOrValue, 10);
+            }
+
+            if (value !== undefined) {
+                const min = 0; // Default min for all
+                const max = 99999; // Default max for production counts, adjust per tag if needed
                 const isValid = !isNaN(value) && value >= min && value <= max;
                 if (isValid) {
-                    input.classList.remove('error');  // Clear error immediately if valid
+                    const input = document.getElementById(`${tag}_input`) || document.getElementById(`${tag}_select`);
+                    if (input) input.classList.remove('error');  // Clear error immediately if valid
                     socket.emit('write_word', { tag, value });
                     console.log(`Writing word ${tag}: ${value}`);
                 } else {
-                    input.classList.add('error');
-                    console.error(`Invalid value for ${tag}: ${input.value}`);
+                    const input = document.getElementById(`${tag}_input`) || document.getElementById(`${tag}_select`);
+                    if (input) input.classList.add('error');
+                    console.error(`Invalid value for ${tag}: ${value}`);
                 }
             }
         }
