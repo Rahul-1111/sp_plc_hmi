@@ -65,7 +65,7 @@
             margin: 0 auto;
         }
         .indicator-video-large {
-            width: 1000px; /* Increased width for larger videos */
+            width: 1067px; /* Increased width for larger videos */
             height: 600px; /* Set fixed height for consistency */
             object-fit: contain; /* Ensure video scales properly */
             border: 2px solid #333; /* Adjusted frame width */
@@ -541,12 +541,6 @@
         <button class="nav-button" onclick="showPage('set-quantity')">SET QUANTITY</button>
         <button class="nav-button" id="alarm-button" onclick="toggleAlarmPopup()">ALARMS</button>
         <button class="status-button">
-            VFD FQ: <span id="D512">0</span>
-        </button>
-        <button class="status-button">
-            BIN NO: <span id="D302">0</span>
-        </button>
-        <button class="status-button">
             Prod Select 1: 
             <select id="D556_select" onchange="writeWord('D556', this.value)">
                 <option value="1">A</option>
@@ -561,6 +555,12 @@
                 <option value="2">B</option>
                 <option value="3">C</option>
             </select>
+        </button>
+        <button class="status-button">
+            VFD FQ: <span id="D512">0</span>
+        </button>
+        <button class="status-button">
+            BIN NO: <span id="D302">0</span>
         </button>
         <button class="status-button">
             Prod Count 1: <span id="D560">0</span>
@@ -1207,7 +1207,7 @@
 
             let hasActiveAlarms = false;
 
-            // Handle Bin Visibility with D552 (current), D554 (next), and D550 (video)
+            // Handle Bin Visibility
             const currentBinValue = data.words['D552'] || 0;
             const nextBinValue = data.words['D554'] || 0;
             const videoValue = data.words['D550'] || 0;
@@ -1216,7 +1216,6 @@
             const nextBin = imageMap[nextBinValue] || imageMap['default'];
             const videoDisplay = videoMap[videoValue] || videoMap['default'];
 
-            // Update current bin image
             const currentBinImage = document.getElementById('current-bin-image');
             const currentBinName = document.getElementById('current-bin-name');
             if (currentBinImage.src !== window.location.origin + currentBin.image) {
@@ -1224,7 +1223,6 @@
             }
             currentBinName.textContent = currentBin.name;
 
-            // Update next bin image
             const nextBinImage = document.getElementById('next-bin-image');
             const nextBinName = document.getElementById('next-bin-name');
             if (nextBinImage.src !== window.location.origin + nextBin.image) {
@@ -1232,7 +1230,6 @@
             }
             nextBinName.textContent = nextBin.name;
 
-            // Update video display
             const videoDisplayVideo = document.getElementById('video-display-video');
             const videoDisplayName = document.getElementById('video-display-name');
             if (videoDisplayVideo.src !== window.location.origin + videoDisplay.video) {
@@ -1242,7 +1239,7 @@
             }
             videoDisplayName.textContent = videoDisplay.name;
 
-            // Update other indicators (non-bin, e.g., M9, M300)
+            // Update indicators
             for (let tag in data.bits) {
                 const indicatorElement = document.getElementById(`indicator-${tag}`);
                 const footerToggleElement = document.getElementById(`footer-toggle-${tag}`);
@@ -1282,37 +1279,35 @@
             alarmButton.classList.toggle('alarm-active', hasActiveAlarms);
             alarmButton.textContent = hasActiveAlarms ? 'ALARMS ⚠️' : 'ALARMS';
 
-            // Update word values (including D550, D552, D554, and new registers)
+            // Update word values
             for (let tag in data.words) {
                 const element = document.getElementById(tag);
                 if (element) {
                     element.textContent = data.words[tag];
                 }
-                // Update dropdown selects for D556 and D558
-                if (tag === 'D556') {
-                    const select = document.getElementById('D556_select');
-                    if (select) {
-                        select.value = data.words[tag] || '1';
-                    }
-                }
-                if (tag === 'D558') {
-                    const select = document.getElementById('D558_select');
-                    if (select) {
-                        select.value = data.words[tag] || '1';
-                    }
-                }
+            }
+
+            // ✅ Keep D556 & D558 dropdowns synced with live PLC values
+            if (data.words['D556'] !== undefined) {
+                const sel556 = document.getElementById('D556_select');
+                if (sel556) sel556.value = data.words['D556'];
+            }
+            if (data.words['D558'] !== undefined) {
+                const sel558 = document.getElementById('D558_select');
+                if (sel558) sel558.value = data.words['D558'];
             }
         });
 
+        // ✅ Updated write_response (D556/D558 fixed)
         socket.on('write_response', (response) => {
             if (response.status === 'success') {
                 console.log(`Successfully wrote ${response.value} to ${response.tag}`);
                 const input = document.getElementById(`${response.tag}_input`);
                 if (input) input.classList.remove('error');
-                // Update display span if exists
                 const span = document.getElementById(response.tag);
                 if (span) span.textContent = response.value;
-                // Update select if it's a dropdown tag
+
+                // ✅ Update D556 & D558 dropdowns
                 if (response.tag === 'D556' || response.tag === 'D558') {
                     const select = document.getElementById(`${response.tag}_select`);
                     if (select) select.value = response.value;
@@ -1329,9 +1324,8 @@
                 console.log(`Successfully set ${response.tag} to ${response.value}`);
             } else {
                 console.error(`Failed to set ${response.tag}: ${response.message}`);
-                // Optionally, revert checkbox or show alert
                 const toggle = document.querySelector(`input[id*="${response.tag}"]`);
-                if (toggle) toggle.checked = !response.value;  // Revert on error
+                if (toggle) toggle.checked = !response.value;
             }
         });
 
@@ -1346,7 +1340,7 @@
         const setBitDebounced = debounce((tag, value) => {
             socket.emit('set_bit', { tag, value });
             console.log(`Setting bit ${tag} to ${value}`);
-        }, 50);  // Small debounce to prevent rapid fires
+        }, 50);
 
         function setBit(tag, value) {
             setBitDebounced(tag, value);
@@ -1359,45 +1353,36 @@
             setBit(tag, value);
         }, 300);
 
+        // ✅ Fixed D556/D558 support
         function writeWord(tag, inputIdOrValue) {
             let value;
-            if (typeof inputIdOrValue === 'string' && inputIdOrValue.endsWith('_select')) {
-                // For dropdown selects, value is directly from select
-                const select = document.getElementById(inputIdOrValue);
-                if (select) {
-                    value = parseInt(select.value, 10);
-                }
+
+            if (typeof inputIdOrValue === 'string' && !inputIdOrValue.endsWith('_input') && !inputIdOrValue.endsWith('_select')) {
+                value = parseInt(inputIdOrValue, 10);
             } else if (typeof inputIdOrValue === 'string') {
-                // For number inputs
-                const input = document.getElementById(inputIdOrValue);
-                if (input) {
-                    const rawValue = input.value.trim();
+                const element = document.getElementById(inputIdOrValue);
+                if (element) {
+                    const rawValue = element.value.trim();
                     if (rawValue === '') {
                         console.log(`Skipping write for ${tag}: blank value`);
-                        input.classList.remove('error');  // Ensure no error on blank
-                        return;  // Don't send blank to server
+                        element.classList.remove('error');
+                        return;
                     }
                     value = parseInt(rawValue, 10);
                 }
             } else {
-                // Direct value
                 value = parseInt(inputIdOrValue, 10);
             }
 
-            if (value !== undefined) {
-                const min = 0; // Default min for all
-                const max = 99999; // Default max for production counts, adjust per tag if needed
-                const isValid = !isNaN(value) && value >= min && value <= max;
-                if (isValid) {
-                    const input = document.getElementById(`${tag}_input`) || document.getElementById(`${tag}_select`);
-                    if (input) input.classList.remove('error');  // Clear error immediately if valid
-                    socket.emit('write_word', { tag, value });
-                    console.log(`Writing word ${tag}: ${value}`);
-                } else {
-                    const input = document.getElementById(`${tag}_input`) || document.getElementById(`${tag}_select`);
-                    if (input) input.classList.add('error');
-                    console.error(`Invalid value for ${tag}: ${value}`);
-                }
+            if (!isNaN(value)) {
+                const input = document.getElementById(`${tag}_input`) || document.getElementById(`${tag}_select`);
+                if (input) input.classList.remove('error');
+                socket.emit('write_word', { tag, value });
+                console.log(`Writing word ${tag}: ${value}`);
+            } else {
+                const input = document.getElementById(`${tag}_input`) || document.getElementById(`${tag}_select`);
+                if (input) input.classList.add('error');
+                console.error(`Invalid value for ${tag}: ${inputIdOrValue}`);
             }
         }
 
@@ -1417,7 +1402,6 @@
             popup.style.display = popup.style.display === 'flex' ? 'none' : 'flex';
         }
 
-        // Attach event listeners to all toggles (this ensures switches work)
         document.querySelectorAll('input[type="checkbox"][id^="footer-toggle-"], input[type="checkbox"][id^="toggle-"]').forEach(toggle => {
             toggle.addEventListener('change', () => {
                 let tag;
@@ -1432,17 +1416,14 @@
             });
         });
 
-        // Initialize page
         showPage('home');
 
-        // Client-side validation for number inputs (updated to not error on blank)
         document.querySelectorAll('input[type="number"]').forEach(input => {
             const validateInput = () => {
-                const rawValue = input.value.trim();  // Trim whitespace
+                const rawValue = input.value.trim();
                 if (rawValue === '') {
-                    // Completely blank: no error
                     input.classList.remove('error');
-                    input.title = '';  // Clear tooltip
+                    input.title = '';
                     return;
                 }
 
@@ -1453,7 +1434,7 @@
 
                 if (isValid) {
                     input.classList.remove('error');
-                    input.title = '';  // Clear tooltip
+                    input.title = '';
                 } else {
                     input.classList.add('error');
                     if (!input.hasAttribute('title')) {
@@ -1462,11 +1443,8 @@
                 }
             };
 
-            // Validate on input change and blur (focus out)
             input.addEventListener('input', validateInput);
             input.addEventListener('blur', validateInput);
-
-            // Initial validation
             validateInput();
         });
     </script>
