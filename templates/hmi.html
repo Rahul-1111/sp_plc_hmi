@@ -574,16 +574,26 @@
     <h1>PRAGATI</h1>
 
     <div class="nav-bar">
+        <button class="status-button">
+            🧩 SELECT RECIPE: 
+            <select id="D556_select" onchange="writeWord('D556', this.value)">
+                <option value="1">GRIPPER ARM CD200 - BT40 SERIES</option>
+                <option value="2">GRIPPER ARM CD225 - BT40 SERIES</option>
+                <option value="3">GRIPPER ARM CD250 - BT40 SERIES</option>
+                <option value="4">GRIPPER ARM CD 275 - BT40 SERIES</option>
+                <option value="5">GRIPPER ARM CD 300 - BT40 SERIES</option>
+                <option value="6">GRIPPER ARM CD315 - BT40 SERIES</option>
+                <option value="7">GRIPPER ARM-CD225-V2 SERIES</option>
+                <option value="8">GRIPPER ARM-CD250-V2 SERIES</option>
+                <option value="9">GRIPPER ARM-CD300-V2 SERIES</option>
+                <option value="10">GRIPPER ARM-315-90-V2 SERIES</option>
+            </select>
+        </button>
         <button class="nav-button" onclick="showPage('home')">🤖 AUTO</button>
         <button class="nav-button" onclick="showPage('set-quantity')">⚙️ QUANTITY</button>
         <button class="nav-button" id="alarm-button" onclick="toggleAlarmPopup()">🚨 ALARMS</button>
         <button class="status-button">
-            🧩 SELECT RECIPE: 
-            <select id="D556_select" onchange="writeWord('D556', this.value)">
-                <option value="1">A</option>
-                <option value="2">B</option>
-                <option value="3">C</option>
-            </select>
+            🗑️ BIN NO: <span id="D302">0</span>
         </button>
         <button class="status-button plunger-count">
             🔩 PLUNGER COUNT: <span id="D560">0</span>
@@ -1119,15 +1129,15 @@
     <footer>
         <div class="footer-actions">
             <div class="footer-action">
-                <span>PLUNGER SELECT</span>
+                <span>🔩 PLUNGER SELECT</span>
                 <label class="toggle-switch"><input type="checkbox" id="footer-toggle-L100"><span class="slider"></span></label>
             </div>
             <div class="footer-action">
-                <span>RING FEEDER SELECT</span>
+                <span>⭕ RING FEEDER SELECT</span>
                 <label class="toggle-switch"><input type="checkbox" id="footer-toggle-L101"><span class="slider"></span></label>
             </div>
             <div class="footer-action">
-                <span>ARM SELECT</span>
+                <span>🦾 ARM SELECT</span>
                 <label class="toggle-switch"><input type="checkbox" id="footer-toggle-L102"><span class="slider"></span></label>
             </div>
         </div>
