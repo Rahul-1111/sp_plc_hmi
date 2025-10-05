@@ -517,10 +517,10 @@
         .status-button {
             margin: 0 10px;
             padding: 10px 20px;
-            font-size: 16px;
+            font-size: 20px;
             background-color: #ffffff;
-            color: #007bff;
-            border: 1px solid #007bff;
+            color: #333333;
+            border: 2px solid #007bff;
             border-radius: 4px;
             font-weight: bold;
             transition: transform 0.2s, box-shadow 0.2s;
@@ -528,8 +528,45 @@
             min-width: 200px;
         }
         .status-button:hover {
-            background-color: #0056b3;
-            color: white;
+            color: #333333;
+            border-color: #0056b3;
+        }
+        .status-button span {
+            color: #22973c;
+            font-size: 22px;
+            font-weight: bolder;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+        }
+        .status-button select {
+            background-color: #ffffff;
+            color: #007bff;
+            border: 1px solid #007bff;
+            font-size: 18px;
+            font-weight: bold;
+            margin-left: 5px;
+            padding: 4px 8px;
+        }
+        .status-button select option {
+            background-color: #ffffff;
+            color: #333333;
+        }
+        .plunger-count {
+            background-color: #e8f5e8;
+        }
+        .plunger-count:hover {
+            background-color: #c8e6c8;
+        }
+        .ring-feeder-count {
+            background-color: #fff3e0;
+        }
+        .ring-feeder-count:hover {
+            background-color: #ffe0b2;
+        }
+        .arm-count {
+            background-color: #e3f2fd;
+        }
+        .arm-count:hover {
+            background-color: #bbdefb;
         }
     </style>
 </head>
@@ -537,39 +574,25 @@
     <h1>PRAGATI</h1>
 
     <div class="nav-bar">
-        <button class="nav-button" onclick="showPage('home')">AUTO</button>
-        <button class="nav-button" onclick="showPage('set-quantity')">SET QUANTITY</button>
-        <button class="nav-button" id="alarm-button" onclick="toggleAlarmPopup()">ALARMS</button>
+        <button class="nav-button" onclick="showPage('home')">🤖 AUTO</button>
+        <button class="nav-button" onclick="showPage('set-quantity')">⚙️ QUANTITY</button>
+        <button class="nav-button" id="alarm-button" onclick="toggleAlarmPopup()">🚨 ALARMS</button>
         <button class="status-button">
-            Prod Select 1: 
+            🧩 SELECT RECIPE: 
             <select id="D556_select" onchange="writeWord('D556', this.value)">
                 <option value="1">A</option>
                 <option value="2">B</option>
                 <option value="3">C</option>
             </select>
         </button>
-        <button class="status-button">
-            Prod Select 2: 
-            <select id="D558_select" onchange="writeWord('D558', this.value)">
-                <option value="1">A</option>
-                <option value="2">B</option>
-                <option value="3">C</option>
-            </select>
+        <button class="status-button plunger-count">
+            🔩 PLUNGER COUNT: <span id="D560">0</span>
         </button>
-        <button class="status-button">
-            VFD FQ: <span id="D512">0</span>
+        <button class="status-button ring-feeder-count">
+            ⭕ RING FEEDER COUNT: <span id="D562">0</span>
         </button>
-        <button class="status-button">
-            BIN NO: <span id="D302">0</span>
-        </button>
-        <button class="status-button">
-            Prod Count 1: <span id="D560">0</span>
-        </button>
-        <button class="status-button">
-            Prod Count 2: <span id="D562">0</span>
-        </button>
-        <button class="status-button">
-            Total Count: <span id="D564">0</span>
+        <button class="status-button arm-count">
+            🦾 ARM COUNT: <span id="D564">0</span>
         </button>
     </div>
 
@@ -1287,18 +1310,14 @@
                 }
             }
 
-            // ✅ Keep D556 & D558 dropdowns synced with live PLC values
+            // ✅ Keep D556 dropdown synced with live PLC values
             if (data.words['D556'] !== undefined) {
                 const sel556 = document.getElementById('D556_select');
                 if (sel556) sel556.value = data.words['D556'];
             }
-            if (data.words['D558'] !== undefined) {
-                const sel558 = document.getElementById('D558_select');
-                if (sel558) sel558.value = data.words['D558'];
-            }
         });
 
-        // ✅ Updated write_response (D556/D558 fixed)
+        // ✅ Updated write_response (D556 fixed)
         socket.on('write_response', (response) => {
             if (response.status === 'success') {
                 console.log(`Successfully wrote ${response.value} to ${response.tag}`);
@@ -1307,9 +1326,9 @@
                 const span = document.getElementById(response.tag);
                 if (span) span.textContent = response.value;
 
-                // ✅ Update D556 & D558 dropdowns
-                if (response.tag === 'D556' || response.tag === 'D558') {
-                    const select = document.getElementById(`${response.tag}_select`);
+                // ✅ Update D556 dropdown
+                if (response.tag === 'D556') {
+                    const select = document.getElementById('D556_select');
                     if (select) select.value = response.value;
                 }
             } else {
@@ -1353,7 +1372,7 @@
             setBit(tag, value);
         }, 300);
 
-        // ✅ Fixed D556/D558 support
+        // ✅ Fixed D556 support
         function writeWord(tag, inputIdOrValue) {
             let value;
 
