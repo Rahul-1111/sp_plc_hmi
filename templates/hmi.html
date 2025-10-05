@@ -528,7 +528,7 @@
             min-width: 200px;
         }
         .status-button:hover {
-            color: #333333;
+            color: #ffffffff;
             border-color: #0056b3;
         }
         .status-button span {
@@ -553,20 +553,11 @@
         .plunger-count {
             background-color: #e8f5e8;
         }
-        .plunger-count:hover {
-            background-color: #c8e6c8;
-        }
         .ring-feeder-count {
             background-color: #fff3e0;
         }
-        .ring-feeder-count:hover {
-            background-color: #ffe0b2;
-        }
         .arm-count {
             background-color: #e3f2fd;
-        }
-        .arm-count:hover {
-            background-color: #bbdefb;
         }
     </style>
 </head>
@@ -575,8 +566,9 @@
 
     <div class="nav-bar">
         <button class="status-button">
-            🧩 SELECT RECIPE: 
+            🔽 SELECT RECIPE: 
             <select id="D556_select" onchange="writeWord('D556', this.value)">
+                <option value="0">👇 SELECT RECIPE</option>
                 <option value="1">GRIPPER ARM CD200 - BT40 SERIES</option>
                 <option value="2">GRIPPER ARM CD225 - BT40 SERIES</option>
                 <option value="3">GRIPPER ARM CD250 - BT40 SERIES</option>
