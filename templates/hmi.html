@@ -243,7 +243,7 @@
         }
         .nav-button {
             margin: 0 10px;
-            padding: 10px 20px;
+            padding: 10px 10px;
             font-size: 20px;
             background-color: #ffffff;
             color: #007bff;
@@ -1148,7 +1148,15 @@
     </footer>
 
     <script>
-        const socket = io();
+        /******************************
+        * 🌐 GLOBAL SOCKET CONNECTION (single instance)
+        ******************************/
+        const socket = io({ autoConnect: true, reconnection: true });
+        console.log('✅ SocketIO connected (global instance)');
+
+        /******************************
+        * 🚨 ALARM DEFINITIONS
+        ******************************/
         const alarmTags = [
             { tag: 'M200', name: 'MAIN EMG STOP' },
             { tag: 'M201', name: 'PLUNGER ASSLY EMG STOP' },
@@ -1203,11 +1211,14 @@
             { tag: 'M250', name: 'RECIPE NOT SELECTED' }
         ];
 
+        /******************************
+        * 🖼 IMAGE & VIDEO MAPS
+        ******************************/
         const imageMap = {
             '1': { image: '/static/ASSLY_IMAGES/1.jpeg', name: 'PLUNGER HSG ARM BT 40' },
             '2': { image: '/static/ASSLY_IMAGES/2.jpeg', name: 'OIL SEAL OS15X21X3 IKO MAKE' },
             '3': { image: '/static/ASSLY_IMAGES/3.jpeg', name: 'PLUNGER ARM BT40' },
-            '4': { image: '/static/ASSLY_IMAGES/4.jpeg', name: 'PARALLEL KEY 4X4X12' },
+            '4': { image: '/static/ASSLY_IMAGES/4.jpeg', name: 'PARALLE KEY 4X4X12' },
             '5': { image: '/static/ASSLY_IMAGES/5.jpeg', name: 'SPRING PLUNGER BT 40 ARM' },
             '6': { image: '/static/ASSLY_IMAGES/6.jpeg', name: 'PLUNGERNUT ARM BT 40' },
             '7': { image: '/static/ASSLY_IMAGES/7.jpeg', name: 'O RING 23X15' },
@@ -1230,222 +1241,136 @@
             'default': { video: '/static/ASSLY_IMAGES/off.mp4', name: 'None' }
         };
 
-        // Caches for conditional updates to prevent flickering
+        /******************************
+        * 🧠 STATE CACHES
+        ******************************/
         let lastD550 = null;
         let lastD552 = null;
         let lastD554 = null;
 
-        socket.on('connect', () => {
-            console.log('Connected to server');
-        });
-
-        socket.on('disconnect', () => {
-            console.log('Disconnected from server');
-        });
+        /******************************
+        * 🔗 SOCKET EVENT HANDLERS
+        ******************************/
+        socket.on('connect', () => console.log('✅ Connected to server'));
+        socket.on('disconnect', () => console.warn('❌ Disconnected from server'));
 
         socket.on('plc_data', (data) => {
-            if (data.error) {
-                console.error('PLC Data Error:', data.error);
-                return;
-            }
+            if (data?.error) return console.error('PLC Data Error:', data.error);
 
             let hasActiveAlarms = false;
 
-            // Handle Bin Visibility - only update if relevant words changed
+            const videoValue = data.words['D550'] || 0;
             const currentBinValue = data.words['D552'] || 0;
             const nextBinValue = data.words['D554'] || 0;
-            const videoValue = data.words['D550'] || 0;
 
-            // Video update only if D550 changed
+            // Update video
             if (videoValue !== lastD550) {
-                const videoDisplay = videoMap[videoValue.toString()] || videoMap['default'];
-                const videoDisplayVideo = document.getElementById('video-display-video');
-                const videoDisplayName = document.getElementById('video-display-name');
-                if (videoDisplayVideo.src !== window.location.origin + videoDisplay.video) {
-                    videoDisplayVideo.src = videoDisplay.video;
-                    videoDisplayVideo.load();
-                    videoDisplayVideo.play().catch(e => console.error('Video display play error:', e));
+                const vd = videoMap[videoValue] || videoMap['default'];
+                const vEl = document.getElementById('video-display-video');
+                const vName = document.getElementById('video-display-name');
+                if (vEl && vEl.src !== window.location.origin + vd.video) {
+                    vEl.src = vd.video;
+                    vEl.load();
+                    vEl.play().catch(console.warn);
                 }
-                videoDisplayName.textContent = videoDisplay.name;
+                if (vName) vName.textContent = vd.name;
                 lastD550 = videoValue;
             }
 
-            // Current bin update only if D552 changed
+            // Update current bin
             if (currentBinValue !== lastD552) {
-                const currentBin = imageMap[currentBinValue.toString()] || imageMap['default'];
-                const currentBinImage = document.getElementById('current-bin-image');
-                const currentBinName = document.getElementById('current-bin-name');
-                if (currentBinImage.src !== window.location.origin + currentBin.image) {
-                    currentBinImage.src = currentBin.image;
-                }
-                currentBinName.textContent = currentBin.name;
+                const cb = imageMap[currentBinValue] || imageMap['default'];
+                document.getElementById('current-bin-image').src = cb.image;
+                document.getElementById('current-bin-name').textContent = cb.name;
                 lastD552 = currentBinValue;
             }
 
-            // Next bin update only if D554 changed
+            // Update next bin
             if (nextBinValue !== lastD554) {
-                const nextBin = imageMap[nextBinValue.toString()] || imageMap['default'];
-                const nextBinImage = document.getElementById('next-bin-image');
-                const nextBinName = document.getElementById('next-bin-name');
-                if (nextBinImage.src !== window.location.origin + nextBin.image) {
-                    nextBinImage.src = nextBin.image;
-                }
-                nextBinName.textContent = nextBin.name;
+                const nb = imageMap[nextBinValue] || imageMap['default'];
+                document.getElementById('next-bin-image').src = nb.image;
+                document.getElementById('next-bin-name').textContent = nb.name;
                 lastD554 = nextBinValue;
             }
 
-            // Update indicators
+            // Update bits & alarms
             for (let tag in data.bits) {
-                const indicatorElement = document.getElementById(`indicator-${tag}`);
-                const footerToggleElement = document.getElementById(`footer-toggle-${tag}`);
-                const tableToggleElement = document.getElementById(`toggle-${tag}`);
-                if (indicatorElement) {
-                    if (indicatorElement.tagName === 'SPAN') {
-                        indicatorElement.className = `indicator ${data.bits[tag] ? 'on' : 'off'}`;
-                    } else if (indicatorElement.tagName === 'IMG') {
-                        indicatorElement.src = data.bits[tag] ? '/static/ASSLY_IMAGES/on.png' : '/static/ASSLY_IMAGES/off.png';
-                    }
-                }
-                if (footerToggleElement) {
-                    footerToggleElement.checked = data.bits[tag];
-                    footerToggleElement.disabled = false;
-                }
-                if (tableToggleElement) {
-                    tableToggleElement.checked = data.bits[tag];
-                    tableToggleElement.disabled = false;
-                }
-                if (alarmTags.some(alarm => alarm.tag === tag && data.bits[tag])) {
-                    hasActiveAlarms = true;
-                }
+                const bitVal = data.bits[tag];
+                const ind = document.getElementById(`indicator-${tag}`);
+                if (ind) ind.className = `indicator ${bitVal ? 'on' : 'off'}`;
+                if (alarmTags.some(a => a.tag === tag && bitVal)) hasActiveAlarms = true;
             }
 
-            // Update alarms
-            const alarmList = document.getElementById('alarm-list');
-            alarmList.innerHTML = '';
-            alarmTags.forEach(alarm => {
-                if (data.bits[alarm.tag]) {
-                    const li = document.createElement('li');
-                    li.textContent = alarm.name;
-                    alarmList.appendChild(li);
-                }
-            });
+            const alarmBtn = document.getElementById('alarm-button');
+            alarmBtn.classList.toggle('alarm-active', hasActiveAlarms);
+            alarmBtn.textContent = hasActiveAlarms ? 'ALARMS ⚠️' : 'ALARMS';
 
-            const alarmButton = document.getElementById('alarm-button');
-            alarmButton.classList.toggle('alarm-active', hasActiveAlarms);
-            alarmButton.textContent = hasActiveAlarms ? 'ALARMS ⚠️' : 'ALARMS';
-
-            // Update word values
+            // Update words
             for (let tag in data.words) {
-                const element = document.getElementById(tag);
-                if (element) {
-                    element.textContent = data.words[tag];
-                }
+                const el = document.getElementById(tag);
+                if (el) el.textContent = data.words[tag];
             }
 
-            // ✅ Keep D556 dropdown synced with live PLC values
-            if (data.words['D556'] !== undefined) {
-                const sel556 = document.getElementById('D556_select');
-                if (sel556) sel556.value = data.words['D556'];
-            }
+            // Sync dropdown
+            const sel556 = document.getElementById('D556_select');
+            if (sel556 && data.words['D556'] !== undefined) sel556.value = data.words['D556'];
         });
 
-        // ✅ Updated write_response (D556 fixed)
-        socket.on('write_response', (response) => {
-            if (response.status === 'success') {
-                console.log(`Successfully wrote ${response.value} to ${response.tag}`);
-                const input = document.getElementById(`${response.tag}_input`);
-                if (input) input.classList.remove('error');
-                const span = document.getElementById(response.tag);
-                if (span) span.textContent = response.value;
-
-                // ✅ Update D556 dropdown
-                if (response.tag === 'D556') {
-                    const select = document.getElementById('D556_select');
-                    if (select) select.value = response.value;
-                }
-            } else {
-                console.error(`Failed to write to ${response.tag}: ${response.message}`);
-                const input = document.getElementById(`${response.tag}_input`);
-                if (input) input.classList.add('error');
-            }
-        });
-
-        socket.on('set_bit_response', (response) => {
-            if (response.status === 'success') {
-                console.log(`Successfully set ${response.tag} to ${response.value}`);
-            } else {
-                console.error(`Failed to set ${response.tag}: ${response.message}`);
-                const toggle = document.querySelector(`input[id*="${response.tag}"]`);
-                if (toggle) toggle.checked = !response.value;
-            }
-        });
-
-        function debounce(func, delay) {
-            let timeout;
-            return function (...args) {
-                clearTimeout(timeout);
-                timeout = setTimeout(() => func(...args), delay);
-            };
-        }
-
-        const setBitDebounced = debounce((tag, value) => {
-            socket.emit('set_bit', { tag, value });
-            console.log(`Setting bit ${tag} to ${value}`);
-        }, 50);
-
-        function setBit(tag, value) {
-            setBitDebounced(tag, value);
-        }
-
-        const toggleBit = debounce((tag) => {
-            const footerToggle = document.getElementById(`footer-toggle-${tag}`);
-            const tableToggle = document.getElementById(`toggle-${tag}`);
-            const value = (footerToggle ? footerToggle.checked : tableToggle ? tableToggle.checked : false);
-            setBit(tag, value);
-        }, 300);
-
-        // ✅ Fixed D556 support
+        /******************************
+        * ✅ SINGLE WRITE FUNCTION
+        ******************************/
         function writeWord(tag, inputIdOrValue) {
             let value;
 
-            if (typeof inputIdOrValue === 'string' && !inputIdOrValue.endsWith('_input') && !inputIdOrValue.endsWith('_select')) {
-                value = parseInt(inputIdOrValue, 10);
-            } else if (typeof inputIdOrValue === 'string') {
-                const element = document.getElementById(inputIdOrValue);
-                if (element) {
-                    const rawValue = element.value.trim();
-                    if (rawValue === '') {
-                        console.log(`Skipping write for ${tag}: blank value`);
-                        element.classList.remove('error');
-                        return;
-                    }
-                    value = parseInt(rawValue, 10);
+            if (typeof inputIdOrValue === 'string') {
+                const el = document.getElementById(inputIdOrValue);
+                if (el) {
+                    const raw = el.value.trim();
+                    if (raw === '') return;
+                    value = parseInt(raw, 10);
+                } else {
+                    value = parseInt(inputIdOrValue, 10);
                 }
             } else {
                 value = parseInt(inputIdOrValue, 10);
             }
 
             if (!isNaN(value)) {
-                const input = document.getElementById(`${tag}_input`) || document.getElementById(`${tag}_select`);
-                if (input) input.classList.remove('error');
                 socket.emit('write_word', { tag, value });
-                console.log(`Writing word ${tag}: ${value}`);
+                console.log(`✍️ Write ${tag} = ${value}`);
             } else {
-                const input = document.getElementById(`${tag}_input`) || document.getElementById(`${tag}_select`);
-                if (input) input.classList.add('error');
-                console.error(`Invalid value for ${tag}: ${inputIdOrValue}`);
+                console.warn(`⚠️ Invalid write to ${tag}`);
             }
         }
 
-        function showPage(pageId) {
-            document.querySelectorAll('.page').forEach(page => {
-                page.classList.remove('active');
-            });
-            document.getElementById(pageId).classList.add('active');
-            document.querySelectorAll('.nav-button').forEach(button => {
-                button.classList.remove('active');
-            });
-            document.querySelector(`.nav-button[onclick="showPage('${pageId}')"]`).classList.add('active');
+        /******************************
+        * ⚙️ DEBOUNCE & BIT CONTROL
+        ******************************/
+        function debounce(fn, delay) {
+            let t;
+            return (...a) => {
+                clearTimeout(t);
+                t = setTimeout(() => fn(...a), delay);
+            };
+        }
+
+        const setBitDebounced = debounce((tag, value) => {
+            socket.emit('set_bit', { tag, value });
+            console.log(`Set bit ${tag} = ${value}`);
+        }, 80);
+
+        function setBit(tag, value) {
+            setBitDebounced(tag, value);
+        }
+
+        /******************************
+        * 🧭 PAGE NAVIGATION
+        ******************************/
+        function showPage(id) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            document.querySelectorAll('.nav-button').forEach(b => b.classList.remove('active'));
+            document.querySelector(`.nav-button[onclick="showPage('${id}')"]`).classList.add('active');
         }
 
         function toggleAlarmPopup() {
@@ -1453,82 +1378,34 @@
             popup.style.display = popup.style.display === 'flex' ? 'none' : 'flex';
         }
 
-        document.querySelectorAll('input[type="checkbox"][id^="footer-toggle-"], input[type="checkbox"][id^="toggle-"]').forEach(toggle => {
-            toggle.addEventListener('change', () => {
-                let tag;
-                if (toggle.id.startsWith('footer-toggle-')) {
-                    tag = toggle.id.replace('footer-toggle-', '');
-                } else if (toggle.id.startsWith('toggle-')) {
-                    tag = toggle.id.replace('toggle-', '');
-                }
-                if (tag) {
-                    toggleBit(tag);
-                }
-            });
-        });
-
-        showPage('home');
-
-        document.querySelectorAll('input[type="number"]').forEach(input => {
-            const validateInput = () => {
-                const rawValue = input.value.trim();
-                if (rawValue === '') {
-                    input.classList.remove('error');
-                    input.title = '';
-                    return;
-                }
-
-                const value = parseInt(rawValue, 10);
-                const min = parseInt(input.min, 10) || 0;
-                const max = parseInt(input.max, 10) || 99999;
-                const isValid = !isNaN(value) && value >= min && value <= max;
-
-                if (isValid) {
-                    input.classList.remove('error');
-                    input.title = '';
-                } else {
-                    input.classList.add('error');
-                    if (!input.hasAttribute('title')) {
-                        input.title = `Value must be between ${min} and ${max}`;
-                    }
-                }
-            };
-
-            input.addEventListener('input', validateInput);
-            input.addEventListener('blur', validateInput);
-            validateInput();
-        });
-
-        // Long press detection for reset counts button
-        let resetPressTimer;
+        /******************************
+        * 🔄 RESET COUNTS LONG PRESS
+        ******************************/
         const resetBtn = document.getElementById('reset-counts-btn');
-
-        function handleResetPressStart(e) {
-            e.preventDefault();
-            resetBtn.classList.add('reset-counts-pressing');
-            resetPressTimer = setTimeout(() => {
-                setBit('M60', true);
-                console.log('Reset counts triggered via M60');
-                resetBtn.textContent = '🔄 RESET COUNTS (TRIGGERED)';
-                setTimeout(() => {
-                    resetBtn.textContent = '🔄 RESET COUNTS';
-                }, 2000);
-            }, 3000);
+        let timer;
+        if (resetBtn) {
+            resetBtn.addEventListener('mousedown', () => {
+                resetBtn.classList.add('reset-counts-pressing');
+                timer = setTimeout(() => {
+                    setBit('M60', true);
+                    resetBtn.textContent = '🔄 RESET COUNTS (TRIGGERED)';
+                    setTimeout(() => resetBtn.textContent = '🔄 RESET COUNTS', 2000);
+                }, 3000);
+            });
+            resetBtn.addEventListener('mouseup', () => {
+                clearTimeout(timer);
+                resetBtn.classList.remove('reset-counts-pressing');
+            });
+            resetBtn.addEventListener('mouseleave', () => {
+                clearTimeout(timer);
+                resetBtn.classList.remove('reset-counts-pressing');
+            });
         }
 
-        function handleResetPressEnd(e) {
-            e.preventDefault();
-            clearTimeout(resetPressTimer);
-            resetBtn.classList.remove('reset-counts-pressing');
-        }
-
-        resetBtn.addEventListener('mousedown', handleResetPressStart);
-        resetBtn.addEventListener('mouseup', handleResetPressEnd);
-        resetBtn.addEventListener('mouseleave', handleResetPressEnd);
-        resetBtn.addEventListener('touchstart', handleResetPressStart, { passive: false });
-        resetBtn.addEventListener('touchend', handleResetPressEnd, { passive: false });
-        resetBtn.addEventListener('touchcancel', handleResetPressEnd);
-        resetBtn.addEventListener('contextmenu', e => e.preventDefault());
+        /******************************
+        * ✅ INIT
+        ******************************/
+        showPage('home');
     </script>
 </body>
 </html>
