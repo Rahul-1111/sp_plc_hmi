@@ -526,16 +526,14 @@
             transition: transform 0.2s, box-shadow 0.2s;
             text-align: left;
             min-width: 200px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            justify-content: space-between;
         }
         .status-button:hover {
             color: #ffffffff;
             border-color: #0056b3;
-        }
-        .status-button span {
-            color: #22973c;
-            font-size: 22px;
-            font-weight: bolder;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
         }
         .status-button select {
             background-color: #ffffff;
@@ -550,14 +548,28 @@
             background-color: #ffffff;
             color: #333333;
         }
+        .count-label {
+            color: #333333;
+            font-weight: normal;
+            font-size: 18px;
+        }
+        .count-value {
+            color: #268724ff;
+            font-weight: bold;
+            font-size: 25px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+            background-color: #fff3cd;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
         .plunger-count {
-            background-color: #e8f5e8;
+            background-color: #d2fad2ff;
         }
         .ring-feeder-count {
-            background-color: #fff3e0;
+            background-color: #f9e8cdff;
         }
         .arm-count {
-            background-color: #e3f2fd;
+            background-color: #d2eafcff;
         }
         .reset-counts-pressing {
             background-color: #ffcc00 !important;
@@ -1144,26 +1156,17 @@
 
     <footer>
         <div class="footer-actions">
-            <div class="footer-action">
-                <span>🔩 PLUNGER SELECT</span>
-                <label class="toggle-switch"><input type="checkbox" id="footer-toggle-L100"><span class="slider"></span></label>
-            </div>
-            <div class="footer-action">
-                <span>⭕ RING FEEDER SELECT</span>
-                <label class="toggle-switch"><input type="checkbox" id="footer-toggle-L101"><span class="slider"></span></label>
-            </div>
-            <div class="footer-action">
-                <span>🦾 ARM SELECT</span>
-                <label class="toggle-switch"><input type="checkbox" id="footer-toggle-L102"><span class="slider"></span></label>
-            </div>
             <button class="status-button plunger-count">
-                🔩 PLUNGER COUNT: <span id="D560">0</span>
+                <span class="count-label">🔩 PLUNGER COUNT:</span> <span id="D560" class="count-value">0</span>
+                <label class="toggle-switch"><input type="checkbox" id="toggle-L100"><span class="slider"></span></label>
             </button>
             <button class="status-button ring-feeder-count">
-                ⭕ RING FEEDER COUNT: <span id="D562">0</span>
+                <span class="count-label">⭕ RING FEEDER COUNT:</span> <span id="D562" class="count-value">0</span>
+                <label class="toggle-switch"><input type="checkbox" id="toggle-L101"><span class="slider"></span></label>
             </button>
             <button class="status-button arm-count">
-                🦾 ARM COUNT: <span id="D564">0</span>
+                <span class="count-label">🦾 ARM COUNT:</span> <span id="D564" class="count-value">0</span>
+                <label class="toggle-switch"><input type="checkbox" id="toggle-L102"><span class="slider"></span></label>
             </button>
             <button class="status-button" id="reset-counts-btn">🔄 RESET COUNTS</button>
         </div>
@@ -1320,6 +1323,10 @@
                 const bitVal = data.bits[tag];
                 const ind = document.getElementById(`indicator-${tag}`);
                 if (ind) ind.className = `indicator ${bitVal ? 'on' : 'off'}`;
+
+                const toggleEl = document.getElementById(`toggle-${tag}`);
+                if (toggleEl) toggleEl.checked = !!bitVal;
+
                 if (alarmTags.some(a => a.tag === tag && bitVal)) hasActiveAlarms = true;
             }
 
@@ -1436,6 +1443,20 @@
                 resetBtn.classList.remove('reset-counts-pressing');
             });
         }
+
+        /******************************
+        * 🔧 BIND TOGGLE EVENTS
+        ******************************/
+        const toggleTags = [
+            'M13', 'M14', 'M15', 'M16', 'M17', 'M20', 'M21', 'M22', 'M33', 'M448', 'M449',
+            'L100', 'L101', 'L102'
+        ];
+        toggleTags.forEach(tag => {
+            const el = document.getElementById(`toggle-${tag}`);
+            if (el) {
+                el.addEventListener('change', e => setBit(tag, e.target.checked));
+            }
+        });
 
         /******************************
         * ✅ INIT
