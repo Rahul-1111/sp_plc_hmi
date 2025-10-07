@@ -57,18 +57,18 @@
             object-fit: contain;
         }
         .indicator-image-large {
-            width: 520px; /* Increased width for larger images */
-            height: 390px; /* Set fixed height for consistency */
-            border: 2px solid #333; /* Adjusted frame width */
+            width: 400px;
+            height: 300px;
+            border: 2px solid #333;
             border-radius: 8px;
             display: block;
             margin: 0 auto;
         }
         .indicator-video-large {
-            width: 1067px; /* Increased width for larger videos */
-            height: 600px; /* Set fixed height for consistency */
-            object-fit: contain; /* Ensure video scales properly */
-            border: 2px solid #333; /* Adjusted frame width */
+            width: 800px;
+            height: 450px;
+            object-fit: contain;
+            border: 2px solid #333;
             border-radius: 8px;
             display: block;
             margin: 0 auto;
@@ -577,7 +577,7 @@
             right: 20px;
             background-color: #28a745;
             color: white;
-            padding: 12px 20px;
+            padding: 12px 60px;
             border-radius: 6px;
             font-size: 25px;
             font-weight: bold;
@@ -617,20 +617,10 @@
         <button class="status-button">
             🗑️ BIN NO: <span id="D302">0</span>
         </button>
-        <button class="status-button plunger-count">
-            🔩 PLUNGER COUNT: <span id="D560">0</span>
-        </button>
-        <button class="status-button ring-feeder-count">
-            ⭕ RING FEEDER COUNT: <span id="D562">0</span>
-        </button>
-        <button class="status-button arm-count">
-            🦾 ARM COUNT: <span id="D564">0</span>
-        </button>
-        <button class="status-button" id="reset-counts-btn">🔄 RESET COUNTS</button>
-        <button class="status-button" id="data-load-btn" onmousedown="setBit('M7', true)" onmouseup="setBit('M7', false); showSuccess();" ontouchstart="setBit('M7', true)" ontouchend="setBit('M7', false); showSuccess();">DATA LOAD</button>
+        <button class="status-button" id="data-load-btn" onmousedown="setBit('M7', true)" onmouseup="setBit('M7', false); showSuccess('Data Loaded Successfully!');" ontouchstart="setBit('M7', true)" ontouchend="setBit('M7', false); showSuccess('Data Loaded Successfully!');">⏳ DATA LOAD</button>
     </div>
 
-    <div id="success-msg">Data Loaded Successfully!</div>
+    <div id="success-msg"></div>
 
     <div id="alarm-popup" class="popup">
         <div class="popup-content">
@@ -1166,6 +1156,16 @@
                 <span>🦾 ARM SELECT</span>
                 <label class="toggle-switch"><input type="checkbox" id="footer-toggle-L102"><span class="slider"></span></label>
             </div>
+            <button class="status-button plunger-count">
+                🔩 PLUNGER COUNT: <span id="D560">0</span>
+            </button>
+            <button class="status-button ring-feeder-count">
+                ⭕ RING FEEDER COUNT: <span id="D562">0</span>
+            </button>
+            <button class="status-button arm-count">
+                🦾 ARM COUNT: <span id="D564">0</span>
+            </button>
+            <button class="status-button" id="reset-counts-btn">🔄 RESET COUNTS</button>
         </div>
     </footer>
 
@@ -1388,8 +1388,9 @@
         /******************************
         * 📱 SUCCESS MESSAGE
         ******************************/
-        function showSuccess() {
+        function showSuccess(message) {
             const msg = document.getElementById('success-msg');
+            msg.textContent = message;
             msg.style.display = 'block';
             setTimeout(() => {
                 msg.style.display = 'none';
@@ -1422,6 +1423,7 @@
                 timer = setTimeout(() => {
                     setBit('M60', true);
                     resetBtn.textContent = '🔄 RESET COUNTS (TRIGGERED)';
+                    showSuccess('Counts Reset Successfully!');
                     setTimeout(() => resetBtn.textContent = '🔄 RESET COUNTS', 2000);
                 }, 3000);
             });
