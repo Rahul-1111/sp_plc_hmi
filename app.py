@@ -25,7 +25,7 @@ plc = PLCConnector(PLC_IP, PLC_PORT, retry_interval=5)  # Increased retry interv
 
 # Tags for bits and words (from SP.xlsx)
 BIT_TAGS = [
-    'M3', 'M7', 'M9','M13', 'M14', 'M15', 'M16', 'M17', 'M20', 'M21', 'M22', 'M23',
+    'M3', 'M7', 'M9','M13', 'M14', 'M15', 'M16', 'M17', 'M20', 'M21', 'M22', 'M33',
     'M60', 'M100', 'M101', 'M102', 'M103', 'M200', 'M201', 'M202', 'M203',
     'M204', 'M205', 'M206', 'M207', 'M208', 'M209', 'M210', 'M211', 'M212', 'M213',
     'M214', 'M215', 'M216', 'M217', 'M218', 'M219', 'M220', 'M221', 'M222', 'M223',

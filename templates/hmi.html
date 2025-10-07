@@ -570,6 +570,25 @@
             50% { transform: scale(1.05); }
             100% { transform: scale(1); }
         }
+        #success-msg {
+            display: none;
+            position: fixed;
+            top: 60px;
+            right: 20px;
+            background-color: #28a745;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 6px;
+            font-size: 25px;
+            font-weight: bold;
+            box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+            z-index: 3000;
+            animation: slideIn 0.3s ease-out;
+        }
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
     </style>
 </head>
 <body>
@@ -608,7 +627,10 @@
             🦾 ARM COUNT: <span id="D564">0</span>
         </button>
         <button class="status-button" id="reset-counts-btn">🔄 RESET COUNTS</button>
+        <button class="status-button" id="data-load-btn" onmousedown="setBit('M7', true)" onmouseup="setBit('M7', false); showSuccess();" ontouchstart="setBit('M7', true)" ontouchend="setBit('M7', false); showSuccess();">DATA LOAD</button>
     </div>
+
+    <div id="success-msg">Data Loaded Successfully!</div>
 
     <div id="alarm-popup" class="popup">
         <div class="popup-content">
@@ -851,15 +873,15 @@
                 <tbody>
                     <tr>
                         <td><span id="D500">0</span>
-                        <input type="number" id="D500_input" min="0" max="50" step="1"><button class="write-button" onclick="writeWord('D500', 'D500_input')">Write</button></td>
+                        <input type="number" id="D500_input" min="0" max="50" step="1" onchange="let v=parseInt(this.value);let mn=parseInt(this.min);let mx=parseInt(this.max);if(!isNaN(v)&&v>=mn&&v<=mx)writeWord('D500',v)"></td>
                         <td><span id="D802">0</span>
-                        <input type="number" id="D802_input" min="0" max="8" step="1"><button class="write-button" onclick="writeWord('D802', 'D802_input')">Write</button></td>
+                        <input type="number" id="D802_input" min="0" max="70" step="1" onchange="let v=parseInt(this.value);let mn=parseInt(this.min);let mx=parseInt(this.max);if(!isNaN(v)&&v>=mn&&v<=mx)writeWord('D802',v)"></td>
                         <td><span id="D812">0</span>
-                        <input type="number" id="D812_input" min="0" max="10" step="1"><button class="write-button" onclick="writeWord('D812', 'D812_input')">Write</button></td>
+                        <input type="number" id="D812_input" min="0" max="10" step="1" onchange="let v=parseInt(this.value);let mn=parseInt(this.min);let mx=parseInt(this.max);if(!isNaN(v)&&v>=mn&&v<=mx)writeWord('D812',v)"></td>
                         <td><span id="D304">0</span>
-                        <input type="number" id="D304_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D304', 'D304_input')">Write</button></td>
+                        <input type="number" id="D304_input" min="0" max="99999" onchange="let v=parseInt(this.value);let mn=parseInt(this.min);let mx=parseInt(this.max);if(!isNaN(v)&&v>=mn&&v<=mx)writeWord('D304',v)"></td>
                         <td><span id="D306">0</span>
-                        <input type="number" id="D306_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D306', 'D306_input')">Write</button></td>
+                        <input type="number" id="D306_input" min="0" max="99999" onchange="let v=parseInt(this.value);let mn=parseInt(this.min);let mx=parseInt(this.max);if(!isNaN(v)&&v>=mn&&v<=mx)writeWord('D306',v)"></td>
                     </tr>
                 </tbody>
             </table>
@@ -882,58 +904,58 @@
                             <tr>
                                 <td>1</td>
                                 <td>PLUNGER HSG ARM BT 40</td>
-                                <td><span id="D310">0</span> <input type="number" id="D310_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D310', 'D310_input')">Write</button></td>
+                                <td><span id="D310">0</span> <input type="number" id="D310_input" min="0" max="99999" onchange="let v=parseInt(this.value);let mn=parseInt(this.min);let mx=parseInt(this.max);if(!isNaN(v)&&v>=mn&&v<=mx)writeWord('D310',v)"></td>
                                 <td><span id="D410">0</span></td>
-                                <td><span id="D610">0</span> <input type="number" id="D610_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D610', 'D610_input')">Write</button></td>
+                                <td><span id="D610">0</span> <input type="number" id="D610_input" min="0" max="99999" onchange="let v=parseInt(this.value);let mn=parseInt(this.min);let mx=parseInt(this.max);if(!isNaN(v)&&v>=mn&&v<=mx)writeWord('D610',v)"></td>
                             </tr>
                             <tr>
                                 <td>2</td>
                                 <td>OIL SEAL OS15X21X3 IKO MAKE</td>
-                                <td><span id="D312">0</span> <input type="number" id="D312_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D312', 'D312_input')">Write</button></td>
+                                <td><span id="D312">0</span> <input type="number" id="D312_input" min="0" max="99999" onchange="let v=parseInt(this.value);let mn=parseInt(this.min);let mx=parseInt(this.max);if(!isNaN(v)&&v>=mn&&v<=mx)writeWord('D312',v)"></td>
                                 <td><span id="D412">0</span></td>
-                                <td><span id="D612">0</span> <input type="number" id="D612_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D612', 'D612_input')">Write</button></td>
+                                <td><span id="D612">0</span> <input type="number" id="D612_input" min="0" max="99999" onchange="let v=parseInt(this.value);let mn=parseInt(this.min);let mx=parseInt(this.max);if(!isNaN(v)&&v>=mn&&v<=mx)writeWord('D612',v)"></td>
                             </tr>
                             <tr>
                                 <td>3</td>
                                 <td>PLUNGER ARM BT40</td>
-                                <td><span id="D314">0</span> <input type="number" id="D314_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D314', 'D314_input')">Write</button></td>
+                                <td><span id="D314">0</span> <input type="number" id="D314_input" min="0" max="99999" onchange="let v=parseInt(this.value);let mn=parseInt(this.min);let mx=parseInt(this.max);if(!isNaN(v)&&v>=mn&&v<=mx)writeWord('D314',v)"></td>
                                 <td><span id="D414">0</span></td>
-                                <td><span id="D614">0</span> <input type="number" id="D614_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D614', 'D614_input')">Write</button></td>
+                                <td><span id="D614">0</span> <input type="number" id="D614_input" min="0" max="99999" onchange="let v=parseInt(this.value);let mn=parseInt(this.min);let mx=parseInt(this.max);if(!isNaN(v)&&v>=mn&&v<=mx)writeWord('D614',v)"></td>
                             </tr>
                             <tr>
                                 <td>4</td>
                                 <td>PARALLEL KEY 4X4X12</td>
-                                <td><span id="D316">0</span> <input type="number" id="D316_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D316', 'D316_input')">Write</button></td>
+                                <td><span id="D316">0</span> <input type="number" id="D316_input" min="0" max="99999" onchange="let v=parseInt(this.value);let mn=parseInt(this.min);let mx=parseInt(this.max);if(!isNaN(v)&&v>=mn&&v<=mx)writeWord('D316',v)"></td>
                                 <td><span id="D416">0</span></td>
-                                <td><span id="D616">0</span> <input type="number" id="D616_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D616', 'D616_input')">Write</button></td>
+                                <td><span id="D616">0</span> <input type="number" id="D616_input" min="0" max="99999" onchange="let v=parseInt(this.value);let mn=parseInt(this.min);let mx=parseInt(this.max);if(!isNaN(v)&&v>=mn&&v<=mx)writeWord('D616',v)"></td>
                             </tr>
                             <tr>
                                 <td>5</td>
                                 <td>SPRING PLUNGER BT 40 ARM</td>
-                                <td><span id="D318">0</span> <input type="number" id="D318_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D318', 'D318_input')">Write</button></td>
+                                <td><span id="D318">0</span> <input type="number" id="D318_input" min="0" max="99999" onchange="let v=parseInt(this.value);let mn=parseInt(this.min);let mx=parseInt(this.max);if(!isNaN(v)&&v>=mn&&v<=mx)writeWord('D318',v)"></td>
                                 <td><span id="D418">0</span></td>
-                                <td><span id="D618">0</span> <input type="number" id="D618_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D618', 'D618_input')">Write</button></td>
+                                <td><span id="D618">0</span> <input type="number" id="D618_input" min="0" max="99999" onchange="let v=parseInt(this.value);let mn=parseInt(this.min);let mx=parseInt(this.max);if(!isNaN(v)&&v>=mn&&v<=mx)writeWord('D618',v)"></td>
                             </tr>
                             <tr>
                                 <td>6</td>
                                 <td>PLUNGERNUT ARM BT 40</td>
-                                <td><span id="D320">0</span> <input type="number" id="D320_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D320', 'D320_input')">Write</button></td>
+                                <td><span id="D320">0</span> <input type="number" id="D320_input" min="0" max="99999" onchange="let v=parseInt(this.value);let mn=parseInt(this.min);let mx=parseInt(this.max);if(!isNaN(v)&&v>=mn&&v<=mx)writeWord('D320',v)"></td>
                                 <td><span id="D420">0</span></td>
-                                <td><span id="D620">0</span> <input type="number" id="D620_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D620', 'D620_input')">Write</button></td>
+                                <td><span id="D620">0</span> <input type="number" id="D620_input" min="0" max="99999" onchange="let v=parseInt(this.value);let mn=parseInt(this.min);let mx=parseInt(this.max);if(!isNaN(v)&&v>=mn&&v<=mx)writeWord('D620',v)"></td>
                             </tr>
                             <tr>
                                 <td>7</td>
                                 <td>O RING 23X15</td>
-                                <td><span id="D322">0</span> <input type="number" id="D322_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D322', 'D322_input')">Write</button></td>
+                                <td><span id="D322">0</span> <input type="number" id="D322_input" min="0" max="99999" onchange="let v=parseInt(this.value);let mn=parseInt(this.min);let mx=parseInt(this.max);if(!isNaN(v)&&v>=mn&&v<=mx)writeWord('D322',v)"></td>
                                 <td><span id="D422">0</span></td>
-                                <td><span id="D622">0</span> <input type="number" id="D622_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D622', 'D622_input')">Write</button></td>
+                                <td><span id="D622">0</span> <input type="number" id="D622_input" min="0" max="99999" onchange="let v=parseInt(this.value);let mn=parseInt(this.min);let mx=parseInt(this.max);if(!isNaN(v)&&v>=mn&&v<=mx)writeWord('D622',v)"></td>
                             </tr>
                             <tr>
                                 <td>8</td>
                                 <td>O RING 28X2</td>
-                                <td><span id="D324">0</span> <input type="number" id="D324_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D324', 'D324_input')">Write</button></td>
+                                <td><span id="D324">0</span> <input type="number" id="D324_input" min="0" max="99999" onchange="let v=parseInt(this.value);let mn=parseInt(this.min);let mx=parseInt(this.max);if(!isNaN(v)&&v>=mn&&v<=mx)writeWord('D324',v)"></td>
                                 <td><span id="D424">0</span></td>
-                                <td><span id="D624">0</span> <input type="number" id="D624_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D624', 'D624_input')">Write</button></td>
+                                <td><span id="D624">0</span> <input type="number" id="D624_input" min="0" max="99999" onchange="let v=parseInt(this.value);let mn=parseInt(this.min);let mx=parseInt(this.max);if(!isNaN(v)&&v>=mn&&v<=mx)writeWord('D624',v)"></td>
                             </tr>
                         </tbody>
                     </table>
@@ -954,37 +976,37 @@
                             <tr>
                                 <td>1</td>
                                 <td>RING FEEDER HSG BT40</td>
-                                <td><span id="D326">0</span> <input type="number" id="D326_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D326', 'D326_input')">Write</button></td>
+                                <td><span id="D326">0</span> <input type="number" id="D326_input" min="0" max="99999" onchange="let v=parseInt(this.value);let mn=parseInt(this.min);let mx=parseInt(this.max);if(!isNaN(v)&&v>=mn&&v<=mx)writeWord('D326',v)"></td>
                                 <td><span id="D426">0</span></td>
-                                <td><span id="D626">0</span> <input type="number" id="D626_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D626', 'D626_input')">Write</button></td>
+                                <td><span id="D626">0</span> <input type="number" id="D626_input" min="0" max="99999" onchange="let v=parseInt(this.value);let mn=parseInt(this.min);let mx=parseInt(this.max);if(!isNaN(v)&&v>=mn&&v<=mx)writeWord('D626',v)"></td>
                             </tr>
                             <tr>
                                 <td>2</td>
                                 <td>RING FEEDER SPACER ATC</td>
-                                <td><span id="D328">0</span> <input type="number" id="D328_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D328', 'D328_input')">Write</button></td>
+                                <td><span id="D328">0</span> <input type="number" id="D328_input" min="0" max="99999" onchange="let v=parseInt(this.value);let mn=parseInt(this.min);let mx=parseInt(this.max);if(!isNaN(v)&&v>=mn&&v<=mx)writeWord('D328',v)"></td>
                                 <td><span id="D428">0</span></td>
-                                <td><span id="D628">0</span> <input type="number" id="D628_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D628', 'D628_input')">Write</button></td>
+                                <td><span id="D628">0</span> <input type="number" id="D628_input" min="0" max="99999" onchange="let v=parseInt(this.value);let mn=parseInt(this.min);let mx=parseInt(this.max);if(!isNaN(v)&&v>=mn&&v<=mx)writeWord('D628',v)"></td>
                             </tr>
                             <tr>
                                 <td>3</td>
                                 <td>BTP80 LOCKING ELEMENT 35X40</td>
-                                <td><span id="D330">0</span> <input type="number" id="D330_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D330', 'D330_input')">Write</button></td>
+                                <td><span id="D330">0</span> <input type="number" id="D330_input" min="0" max="99999" onchange="let v=parseInt(this.value);let mn=parseInt(this.min);let mx=parseInt(this.max);if(!isNaN(v)&&v>=mn&&v<=mx)writeWord('D330',v)"></td>
                                 <td><span id="D430">0</span></td>
-                                <td><span id="D630">0</span> <input type="number" id="D630_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D630', 'D630_input')">Write</button></td>
+                                <td><span id="D630">0</span> <input type="number" id="D630_input" min="0" max="99999" onchange="let v=parseInt(this.value);let mn=parseInt(this.min);let mx=parseInt(this.max);if(!isNaN(v)&&v>=mn&&v<=mx)writeWord('D630',v)"></td>
                             </tr>
                             <tr>
                                 <td>4</td>
                                 <td>RING FEEDER CLAMP BT40</td>
-                                <td><span id="D332">0</span> <input type="number" id="D332_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D332', 'D332_input')">Write</button></td>
+                                <td><span id="D332">0</span> <input type="number" id="D332_input" min="0" max="99999" onchange="let v=parseInt(this.value);let mn=parseInt(this.min);let mx=parseInt(this.max);if(!isNaN(v)&&v>=mn&&v<=mx)writeWord('D332',v)"></td>
                                 <td><span id="D432">0</span></td>
-                                <td><span id="D632">0</span> <input type="number" id="D632_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D632', 'D632_input')">Write</button></td>
+                                <td><span id="D632">0</span> <input type="number" id="D632_input" min="0" max="99999" onchange="let v=parseInt(this.value);let mn=parseInt(this.min);let mx=parseInt(this.max);if(!isNaN(v)&&v>=mn&&v<=mx)writeWord('D632',v)"></td>
                             </tr>
                             <tr>
                                 <td>5</td>
                                 <td>SOC HD SCREW 6X25</td>
-                                <td><span id="D334">0</span> <input type="number" id="D334_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D334', 'D334_input')">Write</button></td>
+                                <td><span id="D334">0</span> <input type="number" id="D334_input" min="0" max="99999" onchange="let v=parseInt(this.value);let mn=parseInt(this.min);let mx=parseInt(this.max);if(!isNaN(v)&&v>=mn&&v<=mx)writeWord('D334',v)"></td>
                                 <td><span id="D434">0</span></td>
-                                <td><span id="D634">0</span> <input type="number" id="D634_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D634', 'D634_input')">Write</button></td>
+                                <td><span id="D634">0</span> <input type="number" id="D634_input" min="0" max="99999" onchange="let v=parseInt(this.value);let mn=parseInt(this.min);let mx=parseInt(this.max);if(!isNaN(v)&&v>=mn&&v<=mx)writeWord('D634',v)"></td>
                             </tr>
                         </tbody>
                     </table>
@@ -1007,121 +1029,121 @@
                             <tr>
                                 <td>1</td>
                                 <td>ARM BODY</td>
-                                <td><span id="D336">0</span> <input type="number" id="D336_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D336', 'D336_input')">Write</button></td>
+                                <td><span id="D336">0</span> <input type="number" id="D336_input" min="0" max="99999" onchange="let v=parseInt(this.value);let mn=parseInt(this.min);let mx=parseInt(this.max);if(!isNaN(v)&&v>=mn&&v<=mx)writeWord('D336',v)"></td>
                                 <td><span id="D436">0</span></td>
-                                <td><span id="D636">0</span> <input type="number" id="D636_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D636', 'D636_input')">Write</button></td>
+                                <td><span id="D636">0</span> <input type="number" id="D636_input" min="0" max="99999" onchange="let v=parseInt(this.value);let mn=parseInt(this.min);let mx=parseInt(this.max);if(!isNaN(v)&&v>=mn&&v<=mx)writeWord('D636',v)"></td>
                             </tr>
                             <tr>
                                 <td>2</td>
                                 <td>LFB 1820 DU BUSH 18XOD 20XL 20</td>
-                                <td><span id="D338">0</span> <input type="number" id="D338_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D338', 'D338_input')">Write</button></td>
+                                <td><span id="D338">0</span> <input type="number" id="D338_input" min="0" max="99999" onchange="let v=parseInt(this.value);let mn=parseInt(this.min);let mx=parseInt(this.max);if(!isNaN(v)&&v>=mn&&v<=mx)writeWord('D338',v)"></td>
                                 <td><span id="D438">0</span></td>
-                                <td><span id="D638">0</span> <input type="number" id="D638_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D638', 'D638_input')">Write</button></td>
+                                <td><span id="D638">0</span> <input type="number" id="D638_input" min="0" max="99999" onchange="let v=parseInt(this.value);let mn=parseInt(this.min);let mx=parseInt(this.max);if(!isNaN(v)&&v>=mn&&v<=mx)writeWord('D638',v)"></td>
                             </tr>
                             <tr>
                                 <td>3</td>
                                 <td>LFB 1215 DU BUSH 12XOD 14XL 15</td>
-                                <td><span id="D340">0</span> <input type="number" id="D340_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D340', 'D340_input')">Write</button></td>
+                                <td><span id="D340">0</span> <input type="number" id="D340_input" min="0" max="99999" onchange="let v=parseInt(this.value);let mn=parseInt(this.min);let mx=parseInt(this.max);if(!isNaN(v)&&v>=mn&&v<=mx)writeWord('D340',v)"></td>
                                 <td><span id="D440">0</span></td>
-                                <td><span id="D640">0</span> <input type="number" id="D640_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D640', 'D640_input')">Write</button></td>
+                                <td><span id="D640">0</span> <input type="number" id="D640_input" min="0" max="99999" onchange="let v=parseInt(this.value);let mn=parseInt(this.min);let mx=parseInt(this.max);if(!isNaN(v)&&v>=mn&&v<=mx)writeWord('D640',v)"></td>
                             </tr>
                             <tr>
                                 <td>4</td>
                                 <td>OIL SEAL OS18X26X4 IKO MAKE</td>
-                                <td><span id="D342">0</span> <input type="number" id="D342_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D342', 'D342_input')">Write</button></td>
+                                <td><span id="D342">0</span> <input type="number" id="D342_input" min="0" max="99999" onchange="let v=parseInt(this.value);let mn=parseInt(this.min);let mx=parseInt(this.max);if(!isNaN(v)&&v>=mn&&v<=mx)writeWord('D342',v)"></td>
                                 <td><span id="D442">0</span></td>
-                                <td><span id="D642">0</span> <input type="number" id="D642_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D642', 'D642_input')">Write</button></td>
+                                <td><span id="D642">0</span> <input type="number" id="D642_input" min="0" max="99999" onchange="let v=parseInt(this.value);let mn=parseInt(this.min);let mx=parseInt(this.max);if(!isNaN(v)&&v>=mn&&v<=mx)writeWord('D642',v)"></td>
                             </tr>
                             <tr>
                                 <td>5</td>
                                 <td>SOC HD SCREW 6X30</td>
-                                <td><span id="D348">0</span> <input type="number" id="D348_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D348', 'D348_input')">Write</button></td>
+                                <td><span id="D348">0</span> <input type="number" id="D348_input" min="0" max="99999" onchange="let v=parseInt(this.value);let mn=parseInt(this.min);let mx=parseInt(this.max);if(!isNaN(v)&&v>=mn&&v<=mx)writeWord('D348',v)"></td>
                                 <td><span id="D444">0</span></td>
-                                <td><span id="D644">0</span> <input type="number" id="D644_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D644', 'D644_input')">Write</button></td>
+                                <td><span id="D644">0</span> <input type="number" id="D644_input" min="0" max="99999" onchange="let v=parseInt(this.value);let mn=parseInt(this.min);let mx=parseInt(this.max);if(!isNaN(v)&&v>=mn&&v<=mx)writeWord('D644',v)"></td>
                             </tr>
                             <tr>
                                 <td>6</td>
                                 <td>PUSHROD</td>
-                                <td><span id="D350">0</span> <input type="number" id="D350_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D350', 'D350_input')">Write</button></td>
+                                <td><span id="D350">0</span> <input type="number" id="D350_input" min="0" max="99999" onchange="let v=parseInt(this.value);let mn=parseInt(this.min);let mx=parseInt(this.max);if(!isNaN(v)&&v>=mn&&v<=mx)writeWord('D350',v)"></td>
                                 <td><span id="D446">0</span></td>
-                                <td><span id="D646">0</span> <input type="number" id="D646_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D646', 'D646_input')">Write</button></td>
+                                <td><span id="D646">0</span> <input type="number" id="D646_input" min="0" max="99999" onchange="let v=parseInt(this.value);let mn=parseInt(this.min);let mx=parseInt(this.max);if(!isNaN(v)&&v>=mn&&v<=mx)writeWord('D646',v)"></td>
                             </tr>
                             <tr>
                                 <td>7</td>
                                 <td>SPRING PUSHROAD BT40</td>
-                                <td><span id="D352">0</span> <input type="number" id="D352_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D352', 'D352_input')">Write</button></td>
+                                <td><span id="D352">0</span> <input type="number" id="D352_input" min="0" max="99999" onchange="let v=parseInt(this.value);let mn=parseInt(this.min);let mx=parseInt(this.max);if(!isNaN(v)&&v>=mn&&v<=mx)writeWord('D352',v)"></td>
                                 <td><span id="D448">0</span></td>
-                                <td><span id="D648">0</span> <input type="number" id="D648_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D648', 'D648_input')">Write</button></td>
+                                <td><span id="D648">0</span> <input type="number" id="D648_input" min="0" max="99999" onchange="let v=parseInt(this.value);let mn=parseInt(this.min);let mx=parseInt(this.max);if(!isNaN(v)&&v>=mn&&v<=mx)writeWord('D648',v)"></td>
                             </tr>
                             <tr>
                                 <td>8</td>
                                 <td>ANTIROTATION KEY</td>
-                                <td><span id="D354">0</span> <input type="number" id="D354_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D354', 'D354_input')">Write</button></td>
+                                <td><span id="D354">0</span> <input type="number" id="D354_input" min="0" max="99999" onchange="let v=parseInt(this.value);let mn=parseInt(this.min);let mx=parseInt(this.max);if(!isNaN(v)&&v>=mn&&v<=mx)writeWord('D354',v)"></td>
                                 <td><span id="D450">0</span></td>
-                                <td><span id="D650">0</span> <input type="number" id="D650_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D650', 'D650_input')">Write</button></td>
+                                <td><span id="D650">0</span> <input type="number" id="D650_input" min="0" max="99999" onchange="let v=parseInt(this.value);let mn=parseInt(this.min);let mx=parseInt(this.max);if(!isNaN(v)&&v>=mn&&v<=mx)writeWord('D650',v)"></td>
                             </tr>
                             <tr>
                                 <td>9</td>
                                 <td>ORING 12X2</td>
-                                <td><span id="D356">0</span> <input type="number" id="D356_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D356', 'D356_input')">Write</button></td>
+                                <td><span id="D356">0</span> <input type="number" id="D356_input" min="0" max="99999" onchange="let v=parseInt(this.value);let mn=parseInt(this.min);let mx=parseInt(this.max);if(!isNaN(v)&&v>=mn&&v<=mx)writeWord('D356',v)"></td>
                                 <td><span id="D452">0</span></td>
-                                <td><span id="D652">0</span> <input type="number" id="D652_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D652', 'D652_input')">Write</button></td>
+                                <td><span id="D652">0</span> <input type="number" id="D652_input" min="0" max="99999" onchange="let v=parseInt(this.value);let mn=parseInt(this.min);let mx=parseInt(this.max);if(!isNaN(v)&&v>=mn&&v<=mx)writeWord('D652',v)"></td>
                             </tr>
                             <tr>
                                 <td>10</td>
                                 <td>SOC HD SCREW 5X10</td>
-                                <td><span id="D358">0</span> <input type="number" id="D358_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D358', 'D358_input')">Write</button></td>
+                                <td><span id="D358">0</span> <input type="number" id="D358_input" min="0" max="99999" onchange="let v=parseInt(this.value);let mn=parseInt(this.min);let mx=parseInt(this.max);if(!isNaN(v)&&v>=mn&&v<=mx)writeWord('D358',v)"></td>
                                 <td><span id="D454">0</span></td>
-                                <td><span id="D654">0</span> <input type="number" id="D654_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D654', 'D654_input')">Write</button></td>
+                                <td><span id="D654">0</span> <input type="number" id="D654_input" min="0" max="99999" onchange="let v=parseInt(this.value);let mn=parseInt(this.min);let mx=parseInt(this.max);if(!isNaN(v)&&v>=mn&&v<=mx)writeWord('D654',v)"></td>
                             </tr>
                             <tr>
                                 <td>11</td>
                                 <td>GRIPPER PLT BT40 16MNCR5</td>
-                                <td><span id="D360">0</span> <input type="number" id="D360_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D360', 'D360_input')">Write</button></td>
+                                <td><span id="D360">0</span> <input type="number" id="D360_input" min="0" max="99999" onchange="let v=parseInt(this.value);let mn=parseInt(this.min);let mx=parseInt(this.max);if(!isNaN(v)&&v>=mn&&v<=mx)writeWord('D360',v)"></td>
                                 <td><span id="D456">0</span></td>
-                                <td><span id="D656">0</span> <input type="number" id="D656_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D656', 'D656_input')">Write</button></td>
+                                <td><span id="D656">0</span> <input type="number" id="D656_input" min="0" max="99999" onchange="let v=parseInt(this.value);let mn=parseInt(this.min);let mx=parseInt(this.max);if(!isNaN(v)&&v>=mn&&v<=mx)writeWord('D656',v)"></td>
                             </tr>
                             <tr>
                                 <td>12</td>
                                 <td>SOC HD SCREW 8X20</td>
-                                <td><span id="D362">0</span> <input type="number" id="D362_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D362', 'D362_input')">Write</button></td>
+                                <td><span id="D362">0</span> <input type="number" id="D362_input" min="0" max="99999" onchange="let v=parseInt(this.value);let mn=parseInt(this.min);let mx=parseInt(this.max);if(!isNaN(v)&&v>=mn&&v<=mx)writeWord('D362',v)"></td>
                                 <td><span id="D458">0</span></td>
-                                <td><span id="D658">0</span> <input type="number" id="D658_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D658', 'D658_input')">Write</button></td>
+                                <td><span id="D658">0</span> <input type="number" id="D658_input" min="0" max="99999" onchange="let v=parseInt(this.value);let mn=parseInt(this.min);let mx=parseInt(this.max);if(!isNaN(v)&&v>=mn&&v<=mx)writeWord('D658',v)"></td>
                             </tr>
                             <tr>
                                 <td>13</td>
                                 <td>ITCP PIN 8X25</td>
-                                <td><span id="D364">0</span> <input type="number" id="D364_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D364', 'D364_input')">Write</button></td>
+                                <td><span id="D364">0</span> <input type="number" id="D364_input" min="0" max="99999" onchange="let v=parseInt(this.value);let mn=parseInt(this.min);let mx=parseInt(this.max);if(!isNaN(v)&&v>=mn&&v<=mx)writeWord('D364',v)"></td>
                                 <td><span id="D460">0</span></td>
-                                <td><span id="D660">0</span> <input type="number" id="D660_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D660', 'D660_input')">Write</button></td>
+                                <td><span id="D660">0</span> <input type="number" id="D660_input" min="0" max="99999" onchange="let v=parseInt(this.value);let mn=parseInt(this.min);let mx=parseInt(this.max);if(!isNaN(v)&&v>=mn&&v<=mx)writeWord('D660',v)"></td>
                             </tr>
                             <tr>
                                 <td>14</td>
                                 <td>ARM KEY SK40</td>
-                                <td><span id="D366">0</span> <input type="number" id="D366_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D366', 'D366_input')">Write</button></td>
+                                <td><span id="D366">0</span> <input type="number" id="D366_input" min="0" max="99999" onchange="let v=parseInt(this.value);let mn=parseInt(this.min);let mx=parseInt(this.max);if(!isNaN(v)&&v>=mn&&v<=mx)writeWord('D366',v)"></td>
                                 <td><span id="D462">0</span></td>
-                                <td><span id="D662">0</span> <input type="number" id="D662_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D662', 'D662_input')">Write</button></td>
+                                <td><span id="D662">0</span> <input type="number" id="D662_input" min="0" max="99999" onchange="let v=parseInt(this.value);let mn=parseInt(this.min);let mx=parseInt(this.max);if(!isNaN(v)&&v>=mn&&v<=mx)writeWord('D662',v)"></td>
                             </tr>
                             <tr>
                                 <td>15</td>
                                 <td>CSK SCREW 6X10</td>
-                                <td><span id="D368">0</span> <input type="number" id="D368_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D368', 'D368_input')">Write</button></td>
+                                <td><span id="D368">0</span> <input type="number" id="D368_input" min="0" max="99999" onchange="let v=parseInt(this.value);let mn=parseInt(this.min);let mx=parseInt(this.max);if(!isNaN(v)&&v>=mn&&v<=mx)writeWord('D368',v)"></td>
                                 <td><span id="D464">0</span></td>
-                                <td><span id="D664">0</span> <input type="number" id="D664_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D664', 'D664_input')">Write</button></td>
+                                <td><span id="D664">0</span> <input type="number" id="D664_input" min="0" max="99999" onchange="let v=parseInt(this.value);let mn=parseInt(this.min);let mx=parseInt(this.max);if(!isNaN(v)&&v>=mn&&v<=mx)writeWord('D664',v)"></td>
                             </tr>
                             <tr>
                                 <td>16</td>
                                 <td>SPARE RING FEEDER HSG ASSY 40SERIES</td>
-                                <td><span id="D344">0</span> <input type="number" id="D344_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D344', 'D344_input')">Write</button></td>
+                                <td><span id="D344">0</span> <input type="number" id="D344_input" min="0" max="99999" onchange="let v=parseInt(this.value);let mn=parseInt(this.min);let mx=parseInt(this.max);if(!isNaN(v)&&v>=mn&&v<=mx)writeWord('D344',v)"></td>
                                 <td><span id="D466">0</span></td>
-                                <td><span id="D666">0</span> <input type="number" id="D666_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D666', 'D666_input')">Write</button></td>
+                                <td><span id="D666">0</span> <input type="number" id="D666_input" min="0" max="99999" onchange="let v=parseInt(this.value);let mn=parseInt(this.min);let mx=parseInt(this.max);if(!isNaN(v)&&v>=mn&&v<=mx)writeWord('D666',v)"></td>
                             </tr>
                             <tr>
                                 <td>17</td>
                                 <td>SPARE PLUNGER HSG ASSY 40 SERIES</td>
-                                <td><span id="D346">0</span> <input type="number" id="D346_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D346', 'D346_input')">Write</button></td>
+                                <td><span id="D346">0</span> <input type="number" id="D346_input" min="0" max="99999" onchange="let v=parseInt(this.value);let mn=parseInt(this.min);let mx=parseInt(this.max);if(!isNaN(v)&&v>=mn&&v<=mx)writeWord('D346',v)"></td>
                                 <td><span id="D468">0</span></td>
-                                <td><span id="D668">0</span> <input type="number" id="D668_input" min="0" max="99999"><button class="write-button" onclick="writeWord('D668', 'D668_input')">Write</button></td>
+                                <td><span id="D668">0</span> <input type="number" id="D668_input" min="0" max="99999" onchange="let v=parseInt(this.value);let mn=parseInt(this.min);let mx=parseInt(this.max);if(!isNaN(v)&&v>=mn&&v<=mx)writeWord('D668',v)"></td>
                             </tr>
                         </tbody>
                     </table>
@@ -1361,6 +1383,17 @@
 
         function setBit(tag, value) {
             setBitDebounced(tag, value);
+        }
+
+        /******************************
+        * 📱 SUCCESS MESSAGE
+        ******************************/
+        function showSuccess() {
+            const msg = document.getElementById('success-msg');
+            msg.style.display = 'block';
+            setTimeout(() => {
+                msg.style.display = 'none';
+            }, 3000);
         }
 
         /******************************
