@@ -1199,6 +1199,8 @@
             { tag: 'M246', name: 'ITCP PIN 8X25 EMPTY' },
             { tag: 'M247', name: 'ARM KEY SK40 EMPTY' },
             { tag: 'M248', name: 'CSK SCREW 6X10 EMPTY' }
+            { tag: 'M249', name: 'PLEASE SELECT AUTO MODE' },
+            { tag: 'M250', name: 'RECIPE NOT SELECTED' }
         ];
 
         const imageMap = {
@@ -1228,6 +1230,11 @@
             'default': { video: '/static/ASSLY_IMAGES/off.mp4', name: 'None' }
         };
 
+        // Caches for conditional updates to prevent flickering
+        let lastD550 = null;
+        let lastD552 = null;
+        let lastD554 = null;
+
         socket.on('connect', () => {
             console.log('Connected to server');
         });
@@ -1244,37 +1251,48 @@
 
             let hasActiveAlarms = false;
 
-            // Handle Bin Visibility
+            // Handle Bin Visibility - only update if relevant words changed
             const currentBinValue = data.words['D552'] || 0;
             const nextBinValue = data.words['D554'] || 0;
             const videoValue = data.words['D550'] || 0;
 
-            const currentBin = imageMap[currentBinValue] || imageMap['default'];
-            const nextBin = imageMap[nextBinValue] || imageMap['default'];
-            const videoDisplay = videoMap[videoValue] || videoMap['default'];
-
-            const currentBinImage = document.getElementById('current-bin-image');
-            const currentBinName = document.getElementById('current-bin-name');
-            if (currentBinImage.src !== window.location.origin + currentBin.image) {
-                currentBinImage.src = currentBin.image;
+            // Video update only if D550 changed
+            if (videoValue !== lastD550) {
+                const videoDisplay = videoMap[videoValue.toString()] || videoMap['default'];
+                const videoDisplayVideo = document.getElementById('video-display-video');
+                const videoDisplayName = document.getElementById('video-display-name');
+                if (videoDisplayVideo.src !== window.location.origin + videoDisplay.video) {
+                    videoDisplayVideo.src = videoDisplay.video;
+                    videoDisplayVideo.load();
+                    videoDisplayVideo.play().catch(e => console.error('Video display play error:', e));
+                }
+                videoDisplayName.textContent = videoDisplay.name;
+                lastD550 = videoValue;
             }
-            currentBinName.textContent = currentBin.name;
 
-            const nextBinImage = document.getElementById('next-bin-image');
-            const nextBinName = document.getElementById('next-bin-name');
-            if (nextBinImage.src !== window.location.origin + nextBin.image) {
-                nextBinImage.src = nextBin.image;
+            // Current bin update only if D552 changed
+            if (currentBinValue !== lastD552) {
+                const currentBin = imageMap[currentBinValue.toString()] || imageMap['default'];
+                const currentBinImage = document.getElementById('current-bin-image');
+                const currentBinName = document.getElementById('current-bin-name');
+                if (currentBinImage.src !== window.location.origin + currentBin.image) {
+                    currentBinImage.src = currentBin.image;
+                }
+                currentBinName.textContent = currentBin.name;
+                lastD552 = currentBinValue;
             }
-            nextBinName.textContent = nextBin.name;
 
-            const videoDisplayVideo = document.getElementById('video-display-video');
-            const videoDisplayName = document.getElementById('video-display-name');
-            if (videoDisplayVideo.src !== window.location.origin + videoDisplay.video) {
-                videoDisplayVideo.src = videoDisplay.video;
-                videoDisplayVideo.load();
-                videoDisplayVideo.play().catch(e => console.error('Video display play error:', e));
+            // Next bin update only if D554 changed
+            if (nextBinValue !== lastD554) {
+                const nextBin = imageMap[nextBinValue.toString()] || imageMap['default'];
+                const nextBinImage = document.getElementById('next-bin-image');
+                const nextBinName = document.getElementById('next-bin-name');
+                if (nextBinImage.src !== window.location.origin + nextBin.image) {
+                    nextBinImage.src = nextBin.image;
+                }
+                nextBinName.textContent = nextBin.name;
+                lastD554 = nextBinValue;
             }
-            videoDisplayName.textContent = videoDisplay.name;
 
             // Update indicators
             for (let tag in data.bits) {

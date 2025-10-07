@@ -31,7 +31,7 @@ BIT_TAGS = [
     'M214', 'M215', 'M216', 'M217', 'M218', 'M219', 'M220', 'M221', 'M222', 'M223',
     'M224', 'M225', 'M226', 'M227', 'M228', 'M229', 'M230', 'M231', 'M232', 'M233',
     'M234', 'M235', 'M236', 'M237', 'M238', 'M239', 'M240', 'M241', 'M242', 'M243',
-    'M244', 'M245', 'M246', 'M247', 'M248', 'M300', 'M301', 'M305', 'M309', 'M313',
+    'M244', 'M245', 'M246', 'M247', 'M248', 'M249', 'M250', 'M300', 'M301', 'M305', 'M309', 'M313',
     'M317', 'M321', 'M325', 'M329', 'M400', 'M401', 'M405', 'M409', 'M413', 'M417',
     'M423', 'M448', 'M449','M500', 'M501', 'M505', 'M509', 'M513', 'M517', 'M521', 'M525', 'M529',
     'M533', 'M537', 'M541', 'M545', 'M549', 'M553', 'M557', 'M563', 'M569', 'L100', 'L101', 'L102'
@@ -50,6 +50,26 @@ WORD_TAGS = [
     'D650', 'D652', 'D654', 'D656', 'D658', 'D660', 'D662', 'D664', 'D666', 'D668', 'D802', 'D812'
 ]
 
+# Separate M and L tags for batch reading
+M_TAGS = [tag for tag in BIT_TAGS if tag.startswith('M')]
+L_TAGS = [tag for tag in BIT_TAGS if tag.startswith('L')]
+
+# Calculate ranges
+MIN_M = min(int(tag[1:]) for tag in M_TAGS)
+MAX_M = max(int(tag[1:]) for tag in M_TAGS)
+M_SIZE = MAX_M - MIN_M + 1
+M_INDICES = {tag: int(tag[1:]) - MIN_M for tag in M_TAGS}
+
+MIN_L = min(int(tag[1:]) for tag in L_TAGS)
+MAX_L = max(int(tag[1:]) for tag in L_TAGS)
+L_SIZE = MAX_L - MIN_L + 1
+L_INDICES = {tag: int(tag[1:]) - MIN_L for tag in L_TAGS}
+
+MIN_D = min(int(tag[1:]) for tag in WORD_TAGS)
+MAX_D = max(int(tag[1:]) for tag in WORD_TAGS)
+D_SIZE = MAX_D - MIN_D + 1
+D_INDICES = {tag: int(tag[1:]) - MIN_D for tag in WORD_TAGS}
+
 # Runtime state
 last_bits = {}
 last_words = {}
@@ -62,28 +82,26 @@ def poll_plc():
     """
     global last_bits, last_words
 
-    # Define ranges based on BIT_TAGS (M7 to M807) and WORD_TAGS (D302 to D668)
-    bit_start = "M7"
-    bit_size = 569 - 7 + 1  # From M7 to M807
-    word_start = "D302"
-    word_size = 812 - 302 + 1  # From D302 to D668
-
-    # Map tag names to their indices in the batch
-    bit_indices = {tag: int(tag[1:]) - 7 for tag in BIT_TAGS}  # e.g., M7 -> 0, M9 -> 2
-    word_indices = {tag: int(tag[1:]) - 302 for tag in WORD_TAGS}  # e.g., D302 -> 0, D304 -> 2
-
     # Force initial emission
     initial = True
 
     while True:
         try:
-            # Read entire ranges in one call
-            bit_values = plc.batch_read_bits(bit_start, bit_size)
-            word_values = plc.batch_read_words(word_start, word_size)
+            # Read M bits batch
+            m_bit_values = plc.batch_read_bits(f"M{MIN_M}", M_SIZE)
+            # Read L bits batch
+            l_bit_values = plc.batch_read_bits(f"L{MIN_L}", L_SIZE)
+            # Read words batch
+            word_values = plc.batch_read_words(f"D{MIN_D}", D_SIZE)
 
             # Extract only the needed tags
-            bits = {tag: bit_values[bit_indices[tag]] for tag in BIT_TAGS}
-            words = {tag: word_values[word_indices[tag]] for tag in WORD_TAGS}
+            bits = {}
+            for tag in M_TAGS:
+                bits[tag] = m_bit_values[M_INDICES[tag]]
+            for tag in L_TAGS:
+                bits[tag] = l_bit_values[L_INDICES[tag]]
+
+            words = {tag: word_values[D_INDICES[tag]] for tag in WORD_TAGS}
 
             # Emit on first poll or if data changes
             if initial or bits != last_bits or words != last_words:
@@ -125,8 +143,14 @@ def handle_toggle_bit(data):
             return
 
         current = plc.read_bit(tag)
-        plc.write_bit(tag, not current)
-        emit('toggle_response', {'status': 'success', 'tag': tag, 'value': not current})
+        new_value = not current
+        plc.write_bit(tag, new_value)
+        # Optional: Read back to confirm
+        confirmed = plc.read_bit(tag)
+        if confirmed == new_value:
+            emit('toggle_response', {'status': 'success', 'tag': tag, 'value': new_value})
+        else:
+            emit('toggle_response', {'status': 'error', 'tag': tag, 'message': 'Write failed - value not confirmed'})
     except Exception as e:
         print(f"[Toggle Bit Error] {tag}: {e}")
         emit('toggle_response', {'status': 'error', 'tag': tag, 'message': str(e)})
@@ -154,7 +178,12 @@ def handle_write_word(data):
         # Ensure only integer is written
         int_value = int(value)
         plc.write_word(tag, int_value)
-        emit('write_response', {'status': 'success', 'tag': tag, 'value': int_value})
+        # Optional: Read back to confirm
+        confirmed = plc.read_word(tag)
+        if confirmed == int_value:
+            emit('write_response', {'status': 'success', 'tag': tag, 'value': int_value})
+        else:
+            emit('write_response', {'status': 'error', 'tag': tag, 'message': 'Write failed - value not confirmed'})
     except Exception as e:
         print(f"[Write Word Error] {tag}: {e}")
         emit('write_response', {'status': 'error', 'tag': tag, 'message': str(e)})
@@ -186,7 +215,12 @@ def handle_set_bit(data):
             return
 
         plc.write_bit(tag, value)
-        emit('set_bit_response', {'status': 'success', 'tag': tag, 'value': value})
+        # Optional: Read back to confirm
+        confirmed = plc.read_bit(tag)
+        if confirmed == value:
+            emit('set_bit_response', {'status': 'success', 'tag': tag, 'value': value})
+        else:
+            emit('set_bit_response', {'status': 'error', 'tag': tag, 'message': 'Write failed - value not confirmed'})
     except Exception as e:
         print(f"[Set Bit Error] {tag}: {e}")
         emit('set_bit_response', {'status': 'error', 'tag': tag, 'message': str(e)})
