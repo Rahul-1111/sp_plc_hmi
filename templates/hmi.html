@@ -559,6 +559,17 @@
         .arm-count {
             background-color: #e3f2fd;
         }
+        .reset-counts-pressing {
+            background-color: #ffcc00 !important;
+            color: #333 !important;
+            border-color: #ff9900 !important;
+            animation: pulse 0.5s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
     </style>
 </head>
 <body>
@@ -596,6 +607,7 @@
         <button class="status-button arm-count">
             🦾 ARM COUNT: <span id="D564">0</span>
         </button>
+        <button class="status-button" id="reset-counts-btn">🔄 RESET COUNTS</button>
     </div>
 
     <div id="alarm-popup" class="popup">
@@ -1468,6 +1480,37 @@
             input.addEventListener('blur', validateInput);
             validateInput();
         });
+
+        // Long press detection for reset counts button
+        let resetPressTimer;
+        const resetBtn = document.getElementById('reset-counts-btn');
+
+        function handleResetPressStart(e) {
+            e.preventDefault();
+            resetBtn.classList.add('reset-counts-pressing');
+            resetPressTimer = setTimeout(() => {
+                setBit('M60', true);
+                console.log('Reset counts triggered via M60');
+                resetBtn.textContent = '🔄 RESET COUNTS (TRIGGERED)';
+                setTimeout(() => {
+                    resetBtn.textContent = '🔄 RESET COUNTS';
+                }, 2000);
+            }, 3000);
+        }
+
+        function handleResetPressEnd(e) {
+            e.preventDefault();
+            clearTimeout(resetPressTimer);
+            resetBtn.classList.remove('reset-counts-pressing');
+        }
+
+        resetBtn.addEventListener('mousedown', handleResetPressStart);
+        resetBtn.addEventListener('mouseup', handleResetPressEnd);
+        resetBtn.addEventListener('mouseleave', handleResetPressEnd);
+        resetBtn.addEventListener('touchstart', handleResetPressStart, { passive: false });
+        resetBtn.addEventListener('touchend', handleResetPressEnd, { passive: false });
+        resetBtn.addEventListener('touchcancel', handleResetPressEnd);
+        resetBtn.addEventListener('contextmenu', e => e.preventDefault());
     </script>
 </body>
 </html>
