@@ -1319,6 +1319,7 @@
             }
 
             // Update bits & alarms
+            let activeAlarms = [];
             for (let tag in data.bits) {
                 const bitVal = data.bits[tag];
                 const ind = document.getElementById(`indicator-${tag}`);
@@ -1327,7 +1328,21 @@
                 const toggleEl = document.getElementById(`toggle-${tag}`);
                 if (toggleEl) toggleEl.checked = !!bitVal;
 
-                if (alarmTags.some(a => a.tag === tag && bitVal)) hasActiveAlarms = true;
+                const alarm = alarmTags.find(a => a.tag === tag);
+                if (alarm && bitVal) {
+                    activeAlarms.push(alarm.name);
+                    hasActiveAlarms = true;
+                }
+            }
+
+            // Populate alarm list
+            const alarmList = document.getElementById('alarm-list');
+            if (alarmList) {
+                if (activeAlarms.length > 0) {
+                    alarmList.innerHTML = activeAlarms.map(name => `<li>${name}</li>`).join('');
+                } else {
+                    alarmList.innerHTML = '<li style="color: #666; font-style: italic;">No Active Alarms</li>';
+                }
             }
 
             const alarmBtn = document.getElementById('alarm-button');
