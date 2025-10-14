@@ -25,7 +25,7 @@ plc = PLCConnector(PLC_IP, PLC_PORT, retry_interval=5)  # Increased retry interv
 
 # Tags for bits and words (from SP.xlsx)
 BIT_TAGS = [
-    'M3', 'M7', 'M9', 'M13', 'M14', 'M15', 'M16', 'M17', 'M20', 'M21', 'M22', 'M33',
+    'M3', 'M7', 'M9', 'M10','M13', 'M14', 'M15', 'M16', 'M17', 'M20', 'M21', 'M22', 'M33',
     'M60', 'M73', 'M74', 'M100', 'M101', 'M102', 'M103', 'M200', 'M201', 'M202', 'M203',
     'M204', 'M205', 'M206', 'M207', 'M208', 'M209', 'M210', 'M211', 'M212', 'M213',
     'M214', 'M215', 'M216', 'M217', 'M218', 'M219', 'M220', 'M221', 'M222', 'M223',
@@ -111,7 +111,6 @@ def poll_plc():
                 initial = False
 
         except Exception as e:
-            print(f"[PLC Poll Error] {e}")
             plc.reconnect()  # Attempt to reconnect on polling error
 
         time.sleep(0.1)  # Poll interval (100 ms)
@@ -119,7 +118,6 @@ def poll_plc():
 # Socket.IO events
 @socketio.on('connect')
 def handle_connect():
-    print("[Client] Connected")
     # Send current PLC state to newly connected client
     socketio.emit('plc_data', {'bits': last_bits, 'words': last_words})
 
@@ -151,7 +149,6 @@ def handle_toggle_bit(data):
         else:
             emit('toggle_response', {'status': 'error', 'tag': tag, 'message': 'Write failed - value not confirmed'})
     except Exception as e:
-        print(f"[Toggle Bit Error] {tag}: {e}")
         emit('toggle_response', {'status': 'error', 'tag': tag, 'message': str(e)})
         plc.reconnect()  # Attempt to reconnect on error
 
@@ -184,7 +181,6 @@ def handle_write_word(data):
         else:
             emit('write_response', {'status': 'error', 'tag': tag, 'message': 'Write failed - value not confirmed'})
     except Exception as e:
-        print(f"[Write Word Error] {tag}: {e}")
         emit('write_response', {'status': 'error', 'tag': tag, 'message': str(e)})
         plc.reconnect()  # Attempt to reconnect on error
 
@@ -219,7 +215,6 @@ def handle_set_bit(data):
         else:
             emit('set_bit_response', {'status': 'error', 'tag': tag, 'message': 'Write failed - value not confirmed'})
     except Exception as e:
-        print(f"[Set Bit Error] {tag}: {e}")
         emit('set_bit_response', {'status': 'error', 'tag': tag, 'message': str(e)})
         plc.reconnect()  # Attempt to reconnect on error
 
@@ -232,7 +227,6 @@ def index():
 if __name__ == '__main__':
     # Start the background polling thread
     threading.Thread(target=poll_plc, daemon=True).start()
-    time.sleep(1)  # Short delay to ensure initial poll completes
 
     # Launch the server
     socketio.run(app, host='0.0.0.0', port=5000)

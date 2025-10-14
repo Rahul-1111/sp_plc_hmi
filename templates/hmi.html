@@ -891,6 +891,7 @@
                         <input type="number" id="D812_input" min="0" max="10" step="1" onchange="let v=parseInt(this.value);let mn=parseInt(this.min);let mx=parseInt(this.max);if(!isNaN(v)&&v>=mn&&v<=mx)writeWord('D812',v)"></td>
                         <td><span id="D700">0</span>
                         <input type="number" id="D700_input" min="0" max="30" onchange="let v=parseInt(this.value);let mn=parseInt(this.min);let mx=parseInt(this.max);if(!isNaN(v)&&v>=mn&&v<=mx)writeWord('D700',v)">
+                        <label class="toggle-switch"><input type="checkbox" id="toggle-M10"><span class="slider"></span></label></td>
                     </tr>
                 </tbody>
             </table>
@@ -1493,7 +1494,7 @@
         ******************************/
         const toggleTags = [
             'M13', 'M14', 'M15', 'M16', 'M17', 'M20', 'M21', 'M22', 'M33', 'M448', 'M449',
-            'L100', 'L101', 'L102'
+            'L100', 'L101', 'L102', 'M10'
         ];
         toggleTags.forEach(tag => {
             const el = document.getElementById(`toggle-${tag}`);
