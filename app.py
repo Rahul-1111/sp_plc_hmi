@@ -25,8 +25,8 @@ plc = PLCConnector(PLC_IP, PLC_PORT, retry_interval=5)  # Increased retry interv
 
 # Tags for bits and words (from SP.xlsx)
 BIT_TAGS = [
-    'M3', 'M7', 'M9','M13', 'M14', 'M15', 'M16', 'M17', 'M20', 'M21', 'M22', 'M33',
-    'M60', 'M100', 'M101', 'M102', 'M103', 'M200', 'M201', 'M202', 'M203',
+    'M3', 'M7', 'M9', 'M13', 'M14', 'M15', 'M16', 'M17', 'M20', 'M21', 'M22', 'M33',
+    'M60', 'M73', 'M74', 'M100', 'M101', 'M102', 'M103', 'M200', 'M201', 'M202', 'M203',
     'M204', 'M205', 'M206', 'M207', 'M208', 'M209', 'M210', 'M211', 'M212', 'M213',
     'M214', 'M215', 'M216', 'M217', 'M218', 'M219', 'M220', 'M221', 'M222', 'M223',
     'M224', 'M225', 'M226', 'M227', 'M228', 'M229', 'M230', 'M231', 'M232', 'M233',
@@ -47,7 +47,7 @@ WORD_TAGS = [
     'D464', 'D466', 'D468', 'D500', 'D512', 'D520', 'D530', 'D550', 'D552', 'D554', 'D556', 'D558', 'D560', 'D562', 'D564',
     'D610', 'D612', 'D614', 'D616', 'D618', 'D620', 'D622', 'D624', 'D626', 'D628',
     'D630', 'D632', 'D634', 'D636', 'D638', 'D640', 'D642', 'D644', 'D646', 'D648',
-    'D650', 'D652', 'D654', 'D656', 'D658', 'D660', 'D662', 'D664', 'D666', 'D668', 'D802', 'D812'
+    'D650', 'D652', 'D654', 'D656', 'D658', 'D660', 'D662', 'D664', 'D666', 'D668', 'D700','D802', 'D812'
 ]
 
 # Separate M and L tags for batch reading
@@ -129,14 +129,13 @@ def handle_toggle_bit(data):
     Flip a PLC bit (ON/OFF).
     Expected payload: {'tag': 'L101'} or string 'L101'
     """
+    # Extract tag outside try to avoid NameError
+    if isinstance(data, dict) and 'tag' in data:
+        tag = data['tag']
+    else:
+        tag = data
+    
     try:
-        # Extract tag from data (handle both dict and string)
-        if isinstance(data, dict) and 'tag' in data:
-            tag = data['tag']
-        else:
-            tag = data
-        print(f"[DEBUG] Toggle request for {tag}")
-        
         # Validate tag
         if tag not in BIT_TAGS:
             emit('toggle_response', {'status': 'error', 'tag': tag, 'message': f'Invalid tag: {tag}'})
@@ -195,20 +194,18 @@ def handle_set_bit(data):
     Set a PLC bit to a specific value (true/false).
     Expected payload: {'tag': 'M13', 'value': true} or {'tag': 'M13', 'value': false}
     """
+    # Extract tag and value outside try to avoid NameError
+    if isinstance(data, dict):
+        tag = data.get('tag')
+        value = data.get('value', True)  # Default to True if missing
+    else:
+        tag = data
+        value = True  # For legacy string-only emits
+
+    if not isinstance(value, bool):
+        value = bool(value)  # Ensure it's a boolean
+
     try:
-        # Extract tag and value from data (handle both dict and string for tag)
-        if isinstance(data, dict):
-            tag = data.get('tag')
-            value = data.get('value', True)  # Default to True if missing
-        else:
-            tag = data
-            value = True  # For legacy string-only emits
-
-        if not isinstance(value, bool):
-            value = bool(value)  # Ensure it's a boolean
-
-        print(f"[DEBUG] Set request for {tag} to {value}")
-        
         # Validate tag
         if tag not in BIT_TAGS:
             emit('set_bit_response', {'status': 'error', 'tag': tag, 'message': f'Invalid tag: {tag}'})
@@ -235,6 +232,7 @@ def index():
 if __name__ == '__main__':
     # Start the background polling thread
     threading.Thread(target=poll_plc, daemon=True).start()
+    time.sleep(1)  # Short delay to ensure initial poll completes
 
     # Launch the server
     socketio.run(app, host='0.0.0.0', port=5000)

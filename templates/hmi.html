@@ -690,6 +690,16 @@
                             <td>ARM ASSLY AUTO ON</td>
                             <td><span class="indicator off" id="indicator-M501"></span></td>
                         </tr>
+                        <tr>
+                            <td>6</td>
+                            <td>LAMP 1</td>
+                            <td><span class="indicator off" id="indicator-M73"></span></td>
+                        </tr>
+                        <tr>
+                            <td>7</td>
+                            <td>LAMP 2</td>
+                            <td><span class="indicator off" id="indicator-M74"></span></td>
+                        </tr>
                     </tbody>
                 </table>
 
@@ -868,8 +878,7 @@
                         <th>VFD WRITE</th>
                         <th>SERVO TRQ</th>
                         <th>SERVO SPEED</th>
-                        <th>PLUNGER HOLD TIME</th>
-                        <th>SERVO FWD TIME</th>
+                        <th>MATERIAL INSIDE IN BIN</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -880,10 +889,8 @@
                         <input type="number" id="D802_input" min="0" max="70" step="1" onchange="let v=parseInt(this.value);let mn=parseInt(this.min);let mx=parseInt(this.max);if(!isNaN(v)&&v>=mn&&v<=mx)writeWord('D802',v)"></td>
                         <td><span id="D812">0</span>
                         <input type="number" id="D812_input" min="0" max="10" step="1" onchange="let v=parseInt(this.value);let mn=parseInt(this.min);let mx=parseInt(this.max);if(!isNaN(v)&&v>=mn&&v<=mx)writeWord('D812',v)"></td>
-                        <td><span id="D304">0</span>
-                        <input type="number" id="D304_input" min="0" max="99999" onchange="let v=parseInt(this.value);let mn=parseInt(this.min);let mx=parseInt(this.max);if(!isNaN(v)&&v>=mn&&v<=mx)writeWord('D304',v)"></td>
-                        <td><span id="D306">0</span>
-                        <input type="number" id="D306_input" min="0" max="99999" onchange="let v=parseInt(this.value);let mn=parseInt(this.min);let mx=parseInt(this.max);if(!isNaN(v)&&v>=mn&&v<=mx)writeWord('D306',v)"></td>
+                        <td><span id="D700">0</span>
+                        <input type="number" id="D700_input" min="0" max="30" onchange="let v=parseInt(this.value);let mn=parseInt(this.min);let mx=parseInt(this.max);if(!isNaN(v)&&v>=mn&&v<=mx)writeWord('D700',v)">
                     </tr>
                 </tbody>
             </table>
